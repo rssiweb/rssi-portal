@@ -12,8 +12,8 @@ validation();
 
 function getStudentInfoForDate($con, $studentId, $targetDate)
 {
-    // First try to get from history table
-    $query = "SELECT category_type, class 
+    // Try to get from history table only — no master fallback.
+    $query = "SELECT category_type, class, location_id
               FROM student_category_history 
               WHERE student_id = $1 
               AND is_valid = true
@@ -27,15 +27,11 @@ function getStudentInfoForDate($con, $studentId, $targetDate)
 
     $result = pg_query_params($con, $query, array($studentId));
     if ($row = pg_fetch_assoc($result)) {
-        return $row; // Return historical data if found
+        return $row;
     }
 
-    // Fallback to original student record if no history exists
-    $originalQuery = "SELECT type_of_admission as category_type, class 
-                     FROM rssimyprofile_student 
-                     WHERE student_id = $1";
-    $originalResult = pg_query_params($con, $originalQuery, array($studentId));
-    return pg_fetch_assoc($originalResult) ?? ['category_type' => null, 'class' => null];
+    // No active plan for this date — return explicit nulls
+    return ['category_type' => null, 'class' => null, 'location_id' => null];
 }
 
 // Get filter parameters
@@ -161,8 +157,47 @@ if ($hasFilters) {
         // Get student info for current month
         $currentInfo = getStudentInfoForDate($con, $studentId, $firstDayOfMonth);
         $studentType = $currentInfo['category_type'];
-        $currentClass = $currentInfo['class'] ?? $student['class']; // Fallback to original class if null
-        // echo "Student ID: $studentId, Student Type: $studentType, Class: $currentClass<br>";
+        $currentClass = $currentInfo['class']; // no master fallback
+
+        // Resolve location name from the active plan's location_id
+        $currentLocationName = null;
+        if (!empty($currentInfo['location_id'])) {
+            $locRow = pg_fetch_assoc(pg_query(
+                $con,
+                "SELECT name FROM office_locations WHERE id = " . (int)$currentInfo['location_id']
+            ));
+            if ($locRow) {
+                $currentLocationName = $locRow['name'];
+            }
+        }
+
+        // If no active plan exists for this month, skip fee calculations and
+        // emit a placeholder row so the student is visible with "No active plan"
+        if ($studentType === null || $currentClass === null) {
+            $processedStudents[] = [
+                'student_id' => $student['student_id'],
+                'studentname' => $student['studentname'],
+                'class' => $student['class'],           // master class for display only
+                'contact' => $student['contact'],
+                'doa' => date('d-M-Y', strtotime($student['doa'])),
+                'student_type' => 'Class not tagged / No active plan',
+                'no_active_plan' => true,
+                'location_name' => null,               // ← NEW
+                'admission_fee' => 0,
+                'monthly_fee' => 0,
+                'miscellaneous' => 0,
+                'student_specific_fees' => 0,
+                'student_specific_details' => [],
+                'total_fee' => 0,
+                'concession_amount' => 0,
+                'carry_forward' => 0,
+                'net_fee' => 0,
+                'paid_amount' => 0,
+                'core_paid_amount' => 0,
+                'due_amount' => 0
+            ];
+            continue;   // move to next student
+        }
 
         // Get student-specific fees with details
         $studentSpecificDetails = [];
@@ -185,12 +220,18 @@ if ($hasFilters) {
         }
 
         // 1. Get current month's base fees
+        // Resolve the student's active location for this month
+        $currentLocationId = $currentInfo['location_id'] ?? null;
+
         $feeQuery = "SELECT fc.id, fc.category_name, fs.amount, fc.fee_type
-                FROM fee_structure fs
-                JOIN fee_categories fc ON fs.category_id = fc.id
-                WHERE fs.class = '$currentClass'
-                AND fs.student_type = '$studentType'
-                AND '$firstDayOfMonth' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')";
+        FROM fee_structure fs
+        JOIN fee_categories fc ON fs.category_id = fc.id
+        WHERE fs.class = '$currentClass'
+        AND fs.student_type = '$studentType'
+        AND (" . ($currentLocationId !== null
+            ? "fs.location_id = " . (int)$currentLocationId
+            : "fs.location_id IS NULL") . ")
+        AND '$firstDayOfMonth' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')";
 
         $feeResult = pg_query($con, $feeQuery);
         $feeItems = pg_fetch_all($feeResult) ?? [];
@@ -305,34 +346,45 @@ if ($hasFilters) {
                 $loopMonthName = date('F', mktime(0, 0, 0, $m, 1));
                 $loopMonthDate = "$loopYear-$loopMonthNum-01";
 
-                // Student type & class for that month
+                // Student type, class, location for that month
                 $info = getStudentInfoForDate($con, $studentId, $loopMonthDate);
-                $loopStudentType = $info['category_type'];
-                $loopClass = $info['class'] ?? $student['class'];
+                $loopStudentType  = $info['category_type'];
+                $loopClass        = $info['class'];
+                $loopLocationId   = $info['location_id'] ?? null;
+
+                // Skip months without an active plan — they contribute no base fee
+                if ($loopStudentType === null || $loopClass === null) {
+                    continue;
+                }
+
+                $locationCondition = ($loopLocationId !== null)
+                    ? "AND fs.location_id = " . (int)$loopLocationId
+                    : "AND fs.location_id IS NULL";
 
                 // Base fees
                 $feeQuery = "
-            SELECT COALESCE(SUM(fs.amount), 0) AS total
-            FROM fee_structure fs
-            JOIN fee_categories fc ON fs.category_id = fc.id
-            WHERE fs.class = '$loopClass'
-              AND fs.student_type = '$loopStudentType'
-              AND '$loopMonthDate' BETWEEN fs.effective_from 
-              AND COALESCE(fs.effective_until, '9999-12-31')
-              AND (
-                  fc.category_name != 'Admission Fee'
-                  OR (
-                      fc.category_name = 'Admission Fee'
-                      AND (
-                          '$loopMonthNum' = '04'
-                          OR (
-                              EXTRACT(MONTH FROM DATE '{$student['doa']}') = '$loopMonthNum'
-                              AND EXTRACT(YEAR FROM DATE '{$student['doa']}') = '$loopYear'
-                          )
-                      )
-                  )
-              )
-        ";
+                    SELECT COALESCE(SUM(fs.amount), 0) AS total
+                    FROM fee_structure fs
+                    JOIN fee_categories fc ON fs.category_id = fc.id
+                    WHERE fs.class = '$loopClass'
+                    AND fs.student_type = '$loopStudentType'
+                    $locationCondition
+                    AND '$loopMonthDate' BETWEEN fs.effective_from 
+                    AND COALESCE(fs.effective_until, '9999-12-31')
+                    AND (
+                        fc.category_name != 'Admission Fee'
+                        OR (
+                            fc.category_name = 'Admission Fee'
+                            AND (
+                                '$loopMonthNum' = '04'
+                                OR (
+                                    EXTRACT(MONTH FROM DATE '{$student['doa']}') = '$loopMonthNum'
+                                    AND EXTRACT(YEAR FROM DATE '{$student['doa']}') = '$loopYear'
+                                )
+                            )
+                        )
+                    )
+                ";
                 $feeResult = pg_query($con, $feeQuery);
                 $baseFee = (float)(pg_fetch_assoc($feeResult)['total'] ?? 0);
 
@@ -390,7 +442,8 @@ if ($hasFilters) {
             'class' => $student['class'],
             'contact' => $student['contact'],
             'doa' => date('d-M-Y', strtotime($student['doa'])),
-            'student_type' => $currentClass . '/' . $studentType,
+            'student_type' => htmlspecialchars($currentClass) . '/' . htmlspecialchars($studentType),
+            'location_name' => $currentLocationName,   // ← NEW
             'admission_fee' => $feeDetails['Admission Fee'],
             'monthly_fee' => $feeDetails['Monthly Fee'],
             'miscellaneous' => $feeDetails['Miscellaneous'],
@@ -781,6 +834,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                             <th>Contact</th>
                                                             <th>DOA</th>
                                                             <th>Type</th>
+                                                            <th>Location</th>
                                                             <?php foreach ($categories as $category): ?>
                                                                 <?php if (in_array($category['category_name'], ['Admission Fee', 'Monthly Fee', 'Miscellaneous'])): ?>
                                                                     <th class="fee-category"><?= $category['category_name'] ?></th>
@@ -807,7 +861,24 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                                                     </a>
                                                                 </td>
                                                                 <td><?= $student['doa'] ?></td>
-                                                                <td><?= $student['student_type'] ?></td>
+                                                                <td>
+                                                                    <?php if (!empty($student['no_active_plan'])): ?>
+                                                                        <span class="text-muted">Class not tagged / No active plan</span>
+                                                                    <?php else: ?>
+                                                                        <?= $student['student_type'] ?>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                                <td>
+                                                                    <?php
+                                                                    if (!empty($student['no_active_plan'])) {
+                                                                        echo '<span class="text-muted">No location found</span>';
+                                                                    } else {
+                                                                        // Resolve location name from the ID we stored
+                                                                        $locName = $student['location_name'] ?? null;
+                                                                        echo $locName !== null ? htmlspecialchars($locName) : '<span class="text-muted">No location found</span>';
+                                                                    }
+                                                                    ?>
+                                                                </td>
                                                                 <td class="text-end">
                                                                     <?= $student['admission_fee'] > 0 ? '₹' . number_format($student['admission_fee'], 2) : '-' ?>
                                                                 </td>

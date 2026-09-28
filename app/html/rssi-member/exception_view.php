@@ -18,38 +18,29 @@ $is_centreIncharge = ($position == 'Centre Incharge' || $position == 'Senior Cen
 if (isset($_GET['delete_exception'])) {
     $exception_id = $_GET['delete_exception'];
 
-    // Begin transaction
     pg_query($con, "BEGIN");
-
     try {
-        // Delete mappings first
         $delete_mappings = pg_query_params(
             $con,
             "DELETE FROM student_exception_mapping WHERE exception_id = $1",
             array($exception_id)
         );
-
         if (!$delete_mappings) {
             throw new Exception("Failed to delete student mappings");
         }
 
-        // Then delete the exception
         $delete_exception = pg_query_params(
             $con,
             "DELETE FROM student_class_days_exceptions WHERE exception_id = $1",
             array($exception_id)
         );
-
         if (!$delete_exception || pg_affected_rows($delete_exception) == 0) {
             throw new Exception("Failed to delete exception or exception not found");
         }
 
-        // Commit transaction
         pg_query($con, "COMMIT");
-
         $_SESSION['success_message'] = "Exception deleted successfully";
     } catch (Exception $e) {
-        // Rollback on error
         pg_query($con, "ROLLBACK");
         $_SESSION['error_message'] = "Error deleting exception: " . $e->getMessage();
     }
@@ -58,11 +49,9 @@ if (isset($_GET['delete_exception'])) {
     exit;
 }
 
-// Check if viewing a specific exception
 $current_exception_id = isset($_GET['exception_id']) ? $_GET['exception_id'] : null;
 
 if ($current_exception_id) {
-    // Get exception header info
     $exception_header_query = pg_query_params(
         $con,
         "SELECT * FROM student_class_days_exceptions WHERE exception_id = $1",
@@ -76,39 +65,35 @@ if ($current_exception_id) {
         exit;
     }
 
-    // Get exception details (affected students)
     $exception_details_query = pg_query_params(
         $con,
-        "SELECT s.student_id, s.studentname, s.class, s.category 
-         FROM student_exception_mapping m
-         JOIN rssimyprofile_student s ON m.student_id = s.student_id
-         WHERE m.exception_id = $1
-         ORDER BY s.class, s.studentname",
+        "SELECT student_id, studentname, class, category
+         FROM v_exception_students
+         WHERE exception_id = $1
+         ORDER BY class, studentname",
         array($current_exception_id)
     );
     $exception_details = pg_fetch_all($exception_details_query) ?: [];
 }
 
-// Get pagination parameters
+// Pagination
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 20;
 $offset = ($page - 1) * $per_page;
 
-// Get filter parameters
+// Filters
 $search = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
 $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
 $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
 
-// Build base query
 $base_query = "
-    FROM 
+    FROM
         student_class_days_exceptions e
-    LEFT JOIN 
+    LEFT JOIN
         student_exception_mapping m ON e.exception_id = m.exception_id
     LEFT JOIN
         rssimyprofile_student s ON m.student_id = s.student_id";
 
-// Build where conditions
 $conditions = [];
 $params = [];
 $param_count = 0;
@@ -117,18 +102,15 @@ if (!empty($search)) {
     $conditions[] = "(e.reason ILIKE $" . ++$param_count . " OR e.created_by ILIKE $" . $param_count . ")";
     $params[] = "%$search%";
 }
-
 if (!empty($date_from)) {
     $conditions[] = "e.exception_date >= $" . ++$param_count;
     $params[] = $date_from;
 }
-
 if (!empty($date_to)) {
     $conditions[] = "e.exception_date <= $" . ++$param_count;
     $params[] = $date_to;
 }
 
-// Complete queries
 $where_clause = $conditions ? "WHERE " . implode(" AND ", $conditions) : "";
 
 $count_query = "SELECT COUNT(DISTINCT e.exception_id) as total $base_query $where_clause";
@@ -137,32 +119,50 @@ $total_exceptions = pg_fetch_result($count_result, 0, 'total');
 $total_pages = ceil($total_exceptions / $per_page);
 
 $exceptions_query = "
-    SELECT 
+    SELECT
         e.exception_id,
         e.exception_date,
         e.reason,
         e.created_by,
         e.created_at,
+        e.scope_type,
+        e.scope_class,
+        e.scope_category,
         COUNT(m.student_id) AS student_count,
         STRING_AGG(DISTINCT s.class, ', ') AS classes_affected,
         STRING_AGG(DISTINCT s.category, ', ') AS categories_affected
     $base_query
     $where_clause
-    GROUP BY 
-        e.exception_id
-    ORDER BY 
+    GROUP BY
+        e.exception_id, e.scope_type, e.scope_class, e.scope_category
+    ORDER BY
         e.exception_date DESC
     LIMIT $per_page OFFSET $offset";
 
 $exceptions_result = pg_query_params($con, $exceptions_query, $params);
 $exceptions = pg_fetch_all($exceptions_result) ?: [];
-?>
 
+function scope_label($row)
+{
+    $t = $row['scope_type'] ?? 'student';
+    switch ($t) {
+        case 'class':
+            return '<span class="badge bg-info text-dark">Class: ' . htmlspecialchars($row['scope_class'] ?? '') . '</span>';
+        case 'class_category':
+            return '<span class="badge bg-warning text-dark">Class: ' . htmlspecialchars($row['scope_class'] ?? '')
+                . ' / ' . htmlspecialchars($row['scope_category'] ?? '') . '</span>';
+        case 'category':
+            return '<span class="badge bg-secondary">Category: ' . htmlspecialchars($row['scope_category'] ?? '') . '</span>';
+        case 'student':
+        default:
+            return '<span class="badge bg-primary">Students</span>';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -177,27 +177,21 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
 
-    <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-
-    <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
 
     <style>
         .exception-card {
-            transition: all 0.3s ease;
+            transition: all .3s ease;
             border-left: 4px solid #0d6efd;
         }
 
         .exception-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, .1);
         }
 
         .clickable-row {
@@ -231,7 +225,7 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
         <div class="pagetitle">
             <h1><?php echo getPageTitle(); ?></h1>
             <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
+        </div>
 
         <section class="section dashboard">
             <div class="row">
@@ -239,24 +233,23 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                     <div class="card">
                         <div class="card-body">
                             <?php if (isset($_SESSION['success_message'])): ?>
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <div class="alert alert-success alert-dismissible fade show">
                                     <?= htmlspecialchars($_SESSION['success_message']) ?>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                                 <?php unset($_SESSION['success_message']); ?>
                             <?php endif; ?>
-
                             <?php if (isset($_SESSION['error_message'])): ?>
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <div class="alert alert-danger alert-dismissible fade show">
                                     <?= htmlspecialchars($_SESSION['error_message']) ?>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                                 <?php unset($_SESSION['error_message']); ?>
                             <?php endif; ?>
 
                             <div class="container mt-3">
                                 <?php if ($current_exception_id): ?>
-                                    <!-- Detail View -->
+                                    <!-- DETAIL VIEW -->
                                     <div class="d-flex justify-content-between align-items-center mb-4">
                                         <div>
                                             <a href="exception_view.php" class="back-link">
@@ -266,7 +259,7 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                         </div>
                                         <div>
                                             <span class="badge bg-primary badge-rounded">
-                                                <?= count($exception_details) ?> student(s)
+                                                <?= count($exception_details) ?> student(s) affected
                                             </span>
                                         </div>
                                     </div>
@@ -278,7 +271,11 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                     <h6>Exception Date</h6>
                                                     <p><?= date('F j, Y', strtotime($exception_header['exception_date'])) ?></p>
                                                 </div>
-                                                <div class="col-md-5">
+                                                <div class="col-md-3">
+                                                    <h6>Scope</h6>
+                                                    <p><?= scope_label($exception_header) ?></p>
+                                                </div>
+                                                <div class="col-md-4">
                                                     <h6>Reason</h6>
                                                     <p><?= htmlspecialchars($exception_header['reason']) ?></p>
                                                 </div>
@@ -286,7 +283,9 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                     <h6>Created By</h6>
                                                     <p><?= htmlspecialchars($exception_header['created_by']) ?></p>
                                                 </div>
-                                                <div class="col-md-2">
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-3">
                                                     <h6>Created On</h6>
                                                     <p><?= date('M j, Y g:i A', strtotime($exception_header['created_at'])) ?></p>
                                                 </div>
@@ -318,8 +317,8 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                         <tr>
                                                             <td><?= htmlspecialchars($student['student_id']) ?></td>
                                                             <td><?= htmlspecialchars($student['studentname']) ?></td>
-                                                            <td><?= htmlspecialchars($student['class']) ?></td>
-                                                            <td><?= htmlspecialchars($student['category']) ?></td>
+                                                            <td><?= htmlspecialchars($student['class'] ?? '—') ?></td>
+                                                            <td><?= htmlspecialchars($student['category'] ?? '—') ?></td>
                                                         </tr>
                                                     <?php endforeach; ?>
                                                 <?php else: ?>
@@ -330,8 +329,9 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                             </tbody>
                                         </table>
                                     </div>
+
                                 <?php else: ?>
-                                    <!-- Summary View -->
+                                    <!-- SUMMARY VIEW -->
                                     <div class="card">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
@@ -345,7 +345,6 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                 <?php endif; ?>
                                             </div>
 
-                                            <!-- Search and Filter Section -->
                                             <div class="row mb-4">
                                                 <div class="col-md-4">
                                                     <form method="get" class="search-form">
@@ -363,11 +362,11 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                         <div class="row g-2">
                                                             <div class="col-md-5">
                                                                 <input type="date" class="form-control" name="date_from"
-                                                                    value="<?= htmlspecialchars($date_from) ?>" placeholder="From date">
+                                                                    value="<?= htmlspecialchars($date_from) ?>">
                                                             </div>
                                                             <div class="col-md-5">
                                                                 <input type="date" class="form-control" name="date_to"
-                                                                    value="<?= htmlspecialchars($date_to) ?>" placeholder="To date">
+                                                                    value="<?= htmlspecialchars($date_to) ?>">
                                                             </div>
                                                             <div class="col-md-2">
                                                                 <button type="submit" class="btn btn-primary w-100">Filter</button>
@@ -376,23 +375,19 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                     </form>
                                                 </div>
                                                 <div class="col-md-3 text-end">
-                                                    <div class="btn-group">
-                                                        <a href="exception_view.php" class="btn btn-outline-secondary">Reset</a>
-                                                    </div>
+                                                    <a href="exception_view.php" class="btn btn-outline-secondary">Reset</a>
                                                 </div>
                                             </div>
 
                                             <?php if (empty($exceptions)): ?>
-                                                <div class="alert alert-info">
-                                                    No exceptions found matching your criteria.
-                                                </div>
+                                                <div class="alert alert-info">No exceptions found matching your criteria.</div>
                                             <?php else: ?>
-                                                <!-- Tabular View -->
                                                 <div class="table-responsive">
                                                     <table class="table table-hover">
                                                         <thead>
                                                             <tr>
                                                                 <th>Date</th>
+                                                                <th>Scope</th>
                                                                 <th>Reason</th>
                                                                 <th>Students</th>
                                                                 <th>Classes</th>
@@ -409,10 +404,9 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                                         <br>
                                                                         <small class="text-muted"><?= date('D', strtotime($exception['exception_date'])) ?></small>
                                                                     </td>
+                                                                    <td><?= scope_label($exception) ?></td>
                                                                     <td><?= htmlspecialchars($exception['reason']) ?></td>
-                                                                    <td>
-                                                                        <?= $exception['student_count'] ?>
-                                                                    </td>
+                                                                    <td><?= $exception['student_count'] ?></td>
                                                                     <td>
                                                                         <?php if ($exception['classes_affected']): ?>
                                                                             <?= implode(', ', array_unique(explode(', ', $exception['classes_affected']))) ?>
@@ -423,15 +417,11 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                                     <td>
                                                                         <?= htmlspecialchars($exception['created_by']) ?>
                                                                         <br>
-                                                                        <small class="text-muted">
-                                                                            <?= date('M j', strtotime($exception['created_at'])) ?>
-                                                                        </small>
+                                                                        <small class="text-muted"><?= date('M j', strtotime($exception['created_at'])) ?></small>
                                                                     </td>
                                                                     <td>
                                                                         <a href="exception_view.php?exception_id=<?= $exception['exception_id'] ?>"
-                                                                            class="btn btn-sm btn-outline-primary">
-                                                                            View
-                                                                        </a>
+                                                                            class="btn btn-sm btn-outline-primary">View</a>
                                                                     </td>
                                                                 </tr>
                                                             <?php endforeach; ?>
@@ -439,55 +429,26 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                                                     </table>
                                                 </div>
 
-                                                <!-- Pagination -->
-                                                <nav aria-label="Page navigation">
+                                                <nav>
                                                     <ul class="pagination justify-content-center">
                                                         <?php if ($page > 1): ?>
-                                                            <li class="page-item">
-                                                                <a class="page-link"
-                                                                    href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>">
-                                                                    First
-                                                                </a>
-                                                            </li>
-                                                            <li class="page-item">
-                                                                <a class="page-link"
-                                                                    href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>">
-                                                                    Previous
-                                                                </a>
-                                                            </li>
+                                                            <li class="page-item"><a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>">First</a></li>
+                                                            <li class="page-item"><a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>">Previous</a></li>
                                                         <?php endif; ?>
-
                                                         <?php
-                                                        // Show page numbers
                                                         $start_page = max(1, $page - 2);
                                                         $end_page = min($total_pages, $page + 2);
-
                                                         for ($i = $start_page; $i <= $end_page; $i++): ?>
                                                             <li class="page-item <?= $i == $page ? 'active' : '' ?>">
-                                                                <a class="page-link"
-                                                                    href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>">
-                                                                    <?= $i ?>
-                                                                </a>
+                                                                <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>"><?= $i ?></a>
                                                             </li>
                                                         <?php endfor; ?>
-
                                                         <?php if ($page < $total_pages): ?>
-                                                            <li class="page-item">
-                                                                <a class="page-link"
-                                                                    href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>">
-                                                                    Next
-                                                                </a>
-                                                            </li>
-                                                            <li class="page-item">
-                                                                <a class="page-link"
-                                                                    href="?<?= http_build_query(array_merge($_GET, ['page' => $total_pages])) ?>">
-                                                                    Last
-                                                                </a>
-                                                            </li>
+                                                            <li class="page-item"><a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>">Next</a></li>
+                                                            <li class="page-item"><a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $total_pages])) ?>">Last</a></li>
                                                         <?php endif; ?>
                                                     </ul>
                                                 </nav>
-
                                                 <div class="text-center text-muted">
                                                     Showing <?= ($offset + 1) ?> to <?= min($offset + $per_page, $total_exceptions) ?>
                                                     of <?= $total_exceptions ?> exceptions
@@ -502,30 +463,19 @@ $exceptions = pg_fetch_all($exceptions_result) ?: [];
                 </div>
             </div>
         </section>
-    </main><!-- End #main -->
+    </main>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-    <!-- Vendor JS Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-
-    <!-- Template Main JS File -->
-      <script src="../assets_new/js/main.js"></script>
-  
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets_new/js/main.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Make rows clickable
-            // $('.clickable-row').click(function() {
-            //     window.location = $(this).data('href');
-            // }).css('cursor', 'pointer');
-
-            // Date range validation
             $('.date-range-form').submit(function(e) {
                 const from = $('[name="date_from"]').val();
                 const to = $('[name="date_to"]').val();
-
                 if (from && to && new Date(from) > new Date(to)) {
                     alert('End date must be after start date');
                     e.preventDefault();

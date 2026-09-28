@@ -90,6 +90,9 @@ $permission_levels = [
 // Get current user's permission level
 $current_user_level = isset($permission_levels[$role]) ? $permission_levels[$role] : 0;
 
+// Convenience flag: is current user an Admin?
+$isAdmin = ($current_user_level >= 2);
+
 // Define field access with minimum required level
 $field_access_levels = [
     'admin_fields' => 2,        // Admin only
@@ -189,6 +192,37 @@ $resultArr = pg_fetch_all($result);
 if ($resultArr && count($resultArr) > 0) {
     $currentStudent = $resultArr[0];
 }
+// Fetch active locations for dropdowns
+$locationsList = pg_fetch_all(
+    pg_query($con, "SELECT id, name FROM office_locations WHERE is_active = TRUE ORDER BY name")
+) ?? [];
+
+// Compute active plan for each student once, so header and Plan tab can reuse it
+$activePlanByStudent = [];
+if (!empty($resultArr)) {
+    $today = date('Y-m-d');
+    foreach ($resultArr as $row) {
+        if (empty($row['student_id'])) continue;
+
+        $sid = pg_escape_string($con, $row['student_id']);
+        $q = "
+            SELECT sch.category_type,
+                   sch.class,
+                   ol.name AS location_name,
+                   sch.effective_from
+            FROM student_category_history sch
+            LEFT JOIN office_locations ol ON sch.location_id = ol.id
+            WHERE sch.student_id = '$sid'
+              AND sch.is_valid = true
+              AND sch.effective_from <= '$today'
+              AND (sch.effective_until >= '$today' OR sch.effective_until IS NULL)
+            ORDER BY sch.effective_from DESC, sch.created_at DESC
+            LIMIT 1
+        ";
+        $res = pg_query($con, $q);
+        $activePlanByStudent[$row['student_id']] = $res && pg_num_rows($res) ? pg_fetch_assoc($res) : null;
+    }
+}
 
 // Add this mapping array BEFORE form processing
 $field_names_mapping = [
@@ -247,7 +281,6 @@ $field_names_mapping = [
     'medium' => 'Medium',
     'preferredbranch' => 'Preferred Branch',
     'nameofthesubjects' => 'Subjects',
-    'class' => 'Class',
 
     // Family Info
     'familymonthlyincome' => 'Family Monthly Income',
@@ -485,16 +518,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $remarks           = $_POST['plan_update_remarks'] ?? '';
             $updated_by        = $associatenumber;
 
+            // NEW: location
+            $location_id = !empty($_POST['plan_update_location_id'])
+                ? (int)$_POST['plan_update_location_id']
+                : null;
+
+            $locationName = null;
+            if ($location_id) {
+                $locRow = pg_fetch_assoc(pg_query(
+                    $con,
+                    "SELECT name FROM office_locations WHERE id = $location_id AND is_active = TRUE"
+                ));
+                if (!$locRow) {
+                    handlePlanUpdateError("Selected location is invalid or inactive.", $updated_fields);
+                    exit;
+                }
+                $locationName = $locRow['name'];
+            }
+
             // ----------------------------------------------
-            // FETCH STUDENT MASTER DATA
+            // FETCH STUDENT MASTER DATA (only doa needed now)
             // ----------------------------------------------
             $studentRow = pg_fetch_assoc(pg_query(
                 $con,
-                "SELECT doa,
-            type_of_admission AS default_category,
-            class AS default_class
-     FROM rssimyprofile_student
-     WHERE student_id = '$search_id'"
+                "SELECT doa
+                 FROM rssimyprofile_student
+                 WHERE student_id = '$search_id'"
             ));
 
             if (empty($studentRow['doa'])) {
@@ -502,13 +551,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $doa              = $studentRow['doa'];
-            $default_category = $studentRow['default_category'];
-            $default_class    = $studentRow['default_class'];
+            $doa = $studentRow['doa'];
 
             $doaMonthStart   = date('Y-m-01', strtotime($doa));
             $selectedMonth   = getFirstDayOfMonth($_POST['plan_update_effective_from_date']);
             $effective_from  = $selectedMonth;
+
+            // ----------------------------------------------
+            // FETCH CURRENT ACTIVE PLAN FROM HISTORY (source of truth)
+            // ----------------------------------------------
+            $currentActivePlan = pg_fetch_assoc(pg_query(
+                $con,
+                "SELECT category_type, class, location_id
+                 FROM student_category_history
+                 WHERE student_id = '$search_id'
+                   AND is_valid = true
+                   AND effective_from <= CURRENT_DATE
+                   AND (effective_until IS NULL OR effective_until >= CURRENT_DATE)
+                 ORDER BY effective_from DESC, created_at DESC
+                 LIMIT 1"
+            ));
+
+            $currentPlanType   = $currentActivePlan['category_type'] ?? null;
+            $currentClass      = $currentActivePlan['class'] ?? null;
+            $currentLocationId = isset($currentActivePlan['location_id']) ? (int)$currentActivePlan['location_id'] : 0;
 
             // ----------------------------------------------
             // VALIDATION: DOA BOUNDARY
@@ -529,28 +595,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
 
                 // ----------------------------------------------
-                // FETCH PLAN HISTORY COUNT
+                // FETCH PLAN HISTORY COUNT (ALL rows — so invalidated rows don't
+                // cause a fresh "default plan" insert)
                 // ----------------------------------------------
                 $historyCount = (int) pg_fetch_result(
                     pg_query(
                         $con,
                         "SELECT COUNT(*) FROM student_category_history
-             WHERE student_id = '$search_id' AND is_valid = true"
+                         WHERE student_id = '$search_id'"
                     ),
                     0,
                     0
                 );
 
                 // ----------------------------------------------
-                // STRICT BLOCK: SAME PLAN FROM ADMISSION
+                // STRICT BLOCK: SAME PLAN AS CURRENTLY ACTIVE
                 // ----------------------------------------------
+                $newLocationId = $location_id ? (int)$location_id : 0;
+
                 if (
-                    $type_of_admission === $default_category &&
-                    $class === $default_class &&
+                    $currentPlanType !== null &&               // a current active plan exists
+                    $type_of_admission === $currentPlanType &&
+                    $class === $currentClass &&
+                    $newLocationId === $currentLocationId &&
                     strtotime($effective_from) >= strtotime($doaMonthStart)
                 ) {
                     handlePlanUpdateError(
-                        "Student is already on this plan. No plan change required.",
+                        "Student is already on this plan. No plan change required. " .
+                            "Plan: $type_of_admission | Class: $class | Location: " . ($locationName ?? 'N/A'),
                         $updated_fields
                     );
                     pg_query($con, "ROLLBACK");
@@ -589,14 +661,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // CREATE DEFAULT PLAN (ONLY WHEN REQUIRED)
                 // ----------------------------------------------
                 if ($historyCount === 0 && strtotime($selectedMonth) > strtotime($doaMonthStart)) {
-                    $doaDate = date('Y-m-d', strtotime($doa));
-                    $prevDay = date('Y-m-d', strtotime($selectedMonth . ' -1 day'));
+                    // Fetch default plan values from the student master (needed for the initial plan row)
+                    $masterForDefault = pg_fetch_assoc(pg_query(
+                        $con,
+                        "SELECT type_of_admission, class, preferredbranch
+                         FROM rssimyprofile_student
+                         WHERE student_id = '$search_id'"
+                    ));
+
+                    $defaultCategory     = $masterForDefault['type_of_admission'] ?? '';
+                    $defaultClass        = $masterForDefault['class'] ?? '';
+                    $defaultLocationName = $masterForDefault['preferredbranch'] ?? '';
+
+                    // Resolve default location_id from name
+                    $defaultLocationId = null;
+                    if (!empty($defaultLocationName)) {
+                        $locRow = pg_fetch_assoc(pg_query(
+                            $con,
+                            "SELECT id FROM office_locations
+                             WHERE name = '" . pg_escape_string($con, $defaultLocationName) . "'
+                             LIMIT 1"
+                        ));
+                        if ($locRow) {
+                            $defaultLocationId = (int)$locRow['id'];
+                        }
+                    }
+
+                    $defaultLocValue = $defaultLocationId ? $defaultLocationId : 'NULL';
+                    $doaDate         = date('Y-m-d', strtotime($doa));
+                    $prevDay         = date('Y-m-d', strtotime($selectedMonth . ' -1 day'));
 
                     pg_query($con, "
             INSERT INTO student_category_history (
                 student_id,
                 category_type,
                 class,
+                location_id,
                 effective_from,
                 effective_until,
                 created_by,
@@ -604,8 +704,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 remarks
             ) VALUES (
                 '$search_id',
-                '$default_category',
-                '$default_class',
+                '" . pg_escape_string($con, $defaultCategory) . "',
+                '" . pg_escape_string($con, $defaultClass) . "',
+                $defaultLocValue,
                 DATE '$doaDate',
                 DATE '$prevDay',
                 'System',
@@ -657,23 +758,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // ----------------------------------------------
                 // INSERT NEW PLAN (OPEN ENDED)
                 // ----------------------------------------------
+                $newLocValue = $location_id ? (int)$location_id : 'NULL';
+
                 pg_query($con, "
         INSERT INTO student_category_history (
             student_id,
             category_type,
             class,
+            location_id,
             effective_from,
             created_by,
             is_valid,
             remarks
         ) VALUES (
             '$search_id',
-            '$type_of_admission',
-            '$class',
+            '" . pg_escape_string($con, $type_of_admission) . "',
+            '" . pg_escape_string($con, $class) . "',
+            $newLocValue,
             DATE '$effective_from',
             '$updated_by',
             true,
-            '$remarks'
+            '" . pg_escape_string($con, $remarks) . "'
         )
     ");
 
@@ -681,14 +786,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // UPDATE STUDENT MASTER (IF CURRENT)
                 // ----------------------------------------------
                 if (strtotime($effective_from) <= strtotime(date('Y-m-01'))) {
+                    $escapedLocationName = $locationName !== null
+                        ? "'" . pg_escape_string($con, $locationName) . "'"
+                        : "NULL";
+
+                    $escapedTypeOfAdmission = pg_escape_string($con, $type_of_admission);
+                    $escapedClass           = pg_escape_string($con, $class);
+
                     pg_query($con, "
-            UPDATE rssimyprofile_student
-            SET type_of_admission = '$type_of_admission',
-                class = '$class',
-                updated_by = '$updated_by',
-                updated_on = NOW()
-            WHERE student_id = '$search_id'
-        ");
+        UPDATE rssimyprofile_student
+        SET type_of_admission = '$escapedTypeOfAdmission',
+            class = '$escapedClass',
+            preferredbranch = $escapedLocationName,
+            updated_by = '$updated_by',
+            updated_on = NOW()
+        WHERE student_id = '$search_id'
+    ");
                 }
 
                 // ----------------------------------------------
@@ -1110,25 +1223,6 @@ foreach ($card_access_levels as $card => $required_level) {
     </style>
     <style>
         /* Status Badge next to name */
-        /* .status-badge {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-radius: 50rem;
-            vertical-align: middle;
-        }
-
-        .status-badge[data-status="Active"] {
-            background-color: #d1e7dd;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-        }
-
-        .status-badge[data-status="Inactive"] {
-            background-color: #f8d7da;
-            color: #842029;
-            border: 1px solid #f5c2c7;
-        } */
 
         /* Status Flag in top-right corner */
         .status-flag-container {
@@ -1286,20 +1380,25 @@ foreach ($card_access_levels as $card => $required_level) {
                                             ?>
                                         </div>
 
+                                        <?php
+                                        // Resolve display values strictly from the active plan (no master fallback)
+                                        $activePlan = $activePlanByStudent[$array['student_id']] ?? null;
+
+                                        $displayClass    = $activePlan['class']         ?? null;
+                                        $displayCategory = $activePlan['category_type'] ?? null;
+                                        $displayLocation = $activePlan['location_name'] ?? null;
+                                        ?>
                                         <div class="primary-details">
                                             <p style="font-size: large;">
-                                                <?php echo $array["studentname"] ?>
-                                                <!-- <?php if (in_array('student_status', $accessible_cards)): ?>
-                                                    Status badge next to name
-                                                    <span class="status-badge ms-2" data-status="<?php echo $array['filterstatus']; ?>">
-                                                        <?php echo $array['filterstatus']; ?>
-                                                    </span>
-                                                <?php endif; ?> -->
+                                                <?php echo htmlspecialchars($array["studentname"]) ?>
                                             </p>
-                                            <p><?php echo $array["student_id"] ?><br>
-                                                <?php echo $array["category"] ?><br>
-                                                <?php echo $array["class"] ?? 'Class not specified' ?>/<?php echo $array["type_of_admission"] ?? 'Admission type not specified' ?></p><br>
-
+                                            <p>
+                                                <?php echo htmlspecialchars($array["student_id"]) ?><br>
+                                                <?php echo htmlspecialchars($array["category"] ?? '') ?><br>
+                                                <?php echo $displayClass !== null ? htmlspecialchars($displayClass) : 'Class not tagged'; ?>
+                                                /
+                                                <?php echo $displayCategory !== null ? htmlspecialchars($displayCategory) : 'No active plan'; ?>
+                                            </p><br>
                                         </div>
 
                                         <div class="contact-info">
@@ -1327,7 +1426,9 @@ foreach ($card_access_levels as $card => $required_level) {
                                             <?php endif; ?>
 
                                             <p><?php echo $array["contact"] ?? 'No contact' ?></p>
-                                            <p><?php echo $array["preferredbranch"] ?? 'Branch not specified' ?></p>
+                                            <p>
+                                                <?php echo $displayLocation !== null ? htmlspecialchars($displayLocation) : 'No location found'; ?>
+                                            </p>
                                             <p><?php echo $array["emailaddress"] ?? 'No email' ?></p>
                                         </div>
                                     </div>
@@ -1625,59 +1726,86 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                     <div class="d-flex align-items-center">
                                                                                         <div class="flex-grow-1">
                                                                                             <?php
-                                                                                            // Default values
-                                                                                            $currentCategory = !empty($array['class']) ? $array['class'] . '/' . $array['type_of_admission'] : 'Not selected';
-                                                                                            $effectiveDateFormatted = !empty($array['doa']) ? date('F Y', strtotime($array['doa'])) : 'Not set';
-                                                                                            $hasFuturePlan = false;
+                                                                                            // No defaults from master — we want explicit "not found" states
+                                                                                            $currentCategory        = null;
+                                                                                            $currentClass           = null;
+                                                                                            $currentLocationName    = null;
+                                                                                            $effectiveDateFormatted = null;
+                                                                                            $hasFuturePlan          = false;
 
                                                                                             if (!empty($array['student_id'])) {
                                                                                                 $currentDate = date('Y-m-d');
 
-                                                                                                // Query to get current active plan (latest by created_at if same effective_from)
-                                                                                                $currentPlanQuery = "SELECT category_type, class, effective_from 
-                                        FROM student_category_history 
-                                        WHERE student_id = '" . $array['student_id'] . "'
-                                        AND is_valid = true
-                                        AND effective_from <= '$currentDate'
-                                        AND (effective_until >= '$currentDate' OR effective_until IS NULL)
-                                        ORDER BY effective_from DESC, created_at DESC LIMIT 1";
+                                                                                                // Fetch current active plan, joining location name if present
+                                                                                                $currentPlanQuery = "
+                                                                                                    SELECT sch.category_type,
+                                                                                                        sch.class,
+                                                                                                        sch.effective_from,
+                                                                                                        ol.name AS location_name
+                                                                                                    FROM student_category_history sch
+                                                                                                    LEFT JOIN office_locations ol ON sch.location_id = ol.id
+                                                                                                    WHERE sch.student_id = '" . pg_escape_string($con, $array['student_id']) . "'
+                                                                                                    AND sch.is_valid = true
+                                                                                                    AND sch.effective_from <= '$currentDate'
+                                                                                                    AND (sch.effective_until >= '$currentDate' OR sch.effective_until IS NULL)
+                                                                                                    ORDER BY sch.effective_from DESC, sch.created_at DESC
+                                                                                                    LIMIT 1
+                                                                                                ";
 
-                                                                                                // Query to check for future plans
-                                                                                                $futurePlanQuery = "SELECT 1 FROM student_category_history
-                                      WHERE student_id = '" . $array['student_id'] . "'
-                                      AND is_valid = true
-                                      AND effective_from > '$currentDate'
-                                      LIMIT 1";
-
-                                                                                                // Get current active plan
                                                                                                 $currentResult = pg_query($con, $currentPlanQuery);
                                                                                                 if ($currentRow = pg_fetch_assoc($currentResult)) {
-                                                                                                    $currentCategory = ($currentRow['class'] ?? $array['class']) . '/' . $currentRow['category_type'];
+                                                                                                    $currentCategory        = $currentRow['category_type'];
+                                                                                                    $currentClass           = $currentRow['class'];
+                                                                                                    $currentLocationName    = $currentRow['location_name'];
                                                                                                     $effectiveDateFormatted = date('F Y', strtotime($currentRow['effective_from']));
                                                                                                 }
 
                                                                                                 // Check for future plans
+                                                                                                $futurePlanQuery = "
+                                                                                                    SELECT 1 FROM student_category_history
+                                                                                                    WHERE student_id = '" . pg_escape_string($con, $array['student_id']) . "'
+                                                                                                    AND is_valid = true
+                                                                                                    AND effective_from > '$currentDate'
+                                                                                                    LIMIT 1
+                                                                                                ";
                                                                                                 $futureResult = pg_query($con, $futurePlanQuery);
                                                                                                 $hasFuturePlan = (pg_num_rows($futureResult) > 0);
                                                                                             }
                                                                                             ?>
 
-                                                                                            <p class="mb-1">
-                                                                                                <strong>Access Category:</strong>
-                                                                                                <span id="current-admission-display"><?php echo $currentCategory; ?></span>
-                                                                                            </p>
-                                                                                            <p class="mb-1">
-                                                                                                <strong>Effective From:</strong>
-                                                                                                <span id="current-effective-date-display">
-                                                                                                    <?php echo $effectiveDateFormatted; ?>
-                                                                                                    <?php if ($hasFuturePlan): ?>
-                                                                                                        <span class="badge bg-warning text-dark ms-2" title="Future plan exists">
-                                                                                                            <i class="bi bi-clock"></i> Pending Change
-                                                                                                        </span>
-                                                                                                    <?php endif; ?>
-                                                                                                </span>
-                                                                                                <small class="text-muted">(Plan will be applied to <?php echo $effectiveDateFormatted; ?> month's feesheet)</small>
-                                                                                            </p>
+                                                                                            <?php if ($currentCategory !== null): ?>
+                                                                                                <p class="mb-1">
+                                                                                                    <strong>Access Category:</strong>
+                                                                                                    <span id="current-admission-display">
+                                                                                                        <?php echo htmlspecialchars($currentCategory); ?>
+                                                                                                    </span>
+                                                                                                </p>
+                                                                                                <p class="mb-1">
+                                                                                                    <strong>Class:</strong>
+                                                                                                    <span id="current-class-display"><?php echo htmlspecialchars($currentClass ?? '—'); ?></span>
+                                                                                                </p>
+                                                                                                <p class="mb-1">
+                                                                                                    <strong>Location:</strong>
+                                                                                                    <span id="current-location-display"><?php echo htmlspecialchars($currentLocationName ?? '—'); ?></span>
+                                                                                                </p>
+                                                                                                <p class="mb-1">
+                                                                                                    <strong>Effective From:</strong>
+                                                                                                    <span id="current-effective-date-display">
+                                                                                                        <?php echo htmlspecialchars($effectiveDateFormatted); ?>
+                                                                                                        <?php if ($hasFuturePlan): ?>
+                                                                                                            <span class="badge bg-warning text-dark ms-2" title="Future plan exists">
+                                                                                                                <i class="bi bi-clock"></i> Pending Change
+                                                                                                            </span>
+                                                                                                        <?php endif; ?>
+                                                                                                    </span>
+                                                                                                    <small class="text-muted">(Plan will be applied to <?php echo htmlspecialchars($effectiveDateFormatted); ?> month's feesheet)</small>
+                                                                                                </p>
+                                                                                            <?php else: ?>
+                                                                                                <p class="mb-1 text-muted">
+                                                                                                    <i class="bi bi-info-circle me-1"></i>
+                                                                                                    <strong>No active plan found.</strong>
+                                                                                                </p>
+                                                                                            <?php endif; ?>
                                                                                         </div>
                                                                                         <div class="ms-3">
                                                                                             <?php if (in_array('plan_enrollment', $accessible_cards)): ?>
@@ -2072,7 +2200,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                 <?php endif; ?>
                                                                             </td>
                                                                         </tr>
-                                                                        <tr>
+                                                                        <!-- <tr>
                                                                             <td><label for="preferredbranch">Preferred Branch:</label></td>
                                                                             <td>
                                                                                 <span id="preferredbranchText"><?php echo $array['preferredbranch']; ?></span>
@@ -2085,7 +2213,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                     </select>
                                                                                 <?php endif; ?>
                                                                             </td>
-                                                                        </tr>
+                                                                        </tr> -->
                                                                         <tr>
                                                                             <td><label for="nameofthesubjects">Select Subjects:</label></td>
                                                                             <td>
@@ -2397,7 +2525,7 @@ foreach ($card_access_levels as $card => $required_level) {
             </div>
         </section>
 
-        <!-- Bootstrap Modal -->
+        <!-- Bootstrap Modal: Plan Update Guide -->
         <div class="modal fade" id="planUpdateGuideModal" tabindex="-1" aria-labelledby="planUpdateGuideModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
@@ -2486,7 +2614,7 @@ foreach ($card_access_levels as $card => $required_level) {
                                 <tr>
                                     <td>Open-ended overlapping plan exists</td>
                                     <td>Any</td>
-                                    <td>Previous plan closed one day before new plan</td>
+                                    <td>Default plan closed one day before new plan</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2500,6 +2628,61 @@ foreach ($card_access_levels as $card => $required_level) {
             </div>
         </div>
 
+        <!-- Edit Plan History Modal -->
+        <div class="modal fade" id="editHistoryModal" tabindex="-1" aria-labelledby="editHistoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="editHistoryModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Edit Plan History Record
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="editHistoryForm">
+                        <div class="modal-body">
+                            <input type="hidden" id="editHistoryId" name="id">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Plan / Class</label>
+                                <div id="editHistoryMeta" class="form-control-plaintext text-muted small"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editEffectiveUntil" class="form-label">Effective Until</label>
+                                <input type="date" class="form-control" id="editEffectiveUntil" name="effective_until">
+                                <small class="form-text text-muted">Leave blank for an open-ended plan.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editIsValid" class="form-label">Is Valid</label>
+                                <select class="form-select" id="editIsValid" name="is_valid" required>
+                                    <option value="1">Yes (Active)</option>
+                                    <option value="0">No (Invalidated)</option>
+                                </select>
+                                <small class="form-text text-muted">Setting to "No" marks the plan as invalidated (soft delete).</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editRemarks" class="form-label">Remarks</label>
+                                <textarea class="form-control" id="editRemarks" name="remarks" rows="3"
+                                    placeholder="Reason for change..."></textarea>
+                            </div>
+
+                            <div id="editHistoryAlert" class="alert d-none" role="alert"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary back-to-history-btn">
+                                <i class="bi bi-arrow-left me-1"></i>Back to History
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="editHistorySubmitBtn">
+                                <i class="bi bi-save me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </main>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -2509,8 +2692,8 @@ foreach ($card_access_levels as $card => $required_level) {
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
-
     <script>
+        const IS_ADMIN = <?php echo $isAdmin ? 'true' : 'false'; ?>;
         // Mobile menu setup (similar to HRMS)
         document.addEventListener('DOMContentLoaded', () => {
             const desktopMenu = document.querySelector('#sidebar-menu');
@@ -2549,40 +2732,33 @@ foreach ($card_access_levels as $card => $required_level) {
 
         // Generate scode in format: 693ca50c910501faf5 (16-char hex)
         function generateScode() {
-            // Create array for 8 random bytes (16 hex chars)
             const bytes = new Uint8Array(8);
 
-            // Use crypto.getRandomValues for secure random numbers
             if (window.crypto && window.crypto.getRandomValues) {
                 window.crypto.getRandomValues(bytes);
             } else {
-                // Fallback for older browsers
                 for (let i = 0; i < 8; i++) {
                     bytes[i] = Math.floor(Math.random() * 256);
                 }
             }
 
-            // Convert bytes to hex string
             let hex = '';
             for (let i = 0; i < bytes.length; i++) {
-                // Convert byte to two-digit hex
                 const hexByte = bytes[i].toString(16).padStart(2, '0');
                 hex += hexByte;
             }
 
-            return hex; // Returns format: 693ca50c910501faf5
+            return hex;
         }
 
         // Handle Generate Scode button click
         $(document).ready(function() {
-            // Generate scode when button is clicked
             $(document).on('click', '#generateScodeBtn', function() {
                 const scodeInput = document.getElementById('scodeInput');
                 if (scodeInput) {
                     const newScode = generateScode();
                     scodeInput.value = newScode;
 
-                    // Show toast notification
                     const toast = document.createElement('div');
                     toast.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
                     toast.style.zIndex = '9999';
@@ -2592,7 +2768,6 @@ foreach ($card_access_levels as $card => $required_level) {
             `;
                     document.body.appendChild(toast);
 
-                    // Auto-remove after 3 seconds
                     setTimeout(() => {
                         toast.remove();
                     }, 3000);
@@ -2600,7 +2775,7 @@ foreach ($card_access_levels as $card => $required_level) {
             });
         });
 
-        // Update the toggleEdit function to handle scode
+        // Toggle edit for a card
         function toggleEdit(cardId) {
             const card = document.getElementById(cardId);
             if (!card) {
@@ -2609,25 +2784,20 @@ foreach ($card_access_levels as $card => $required_level) {
             }
 
             const isEditing = card.classList.contains('editing');
-            console.log('Toggling edit for:', cardId, 'isEditing:', isEditing);
 
             if (isEditing) {
-                // Switch to view mode
                 card.classList.remove('editing');
 
-                // Hide all inputs
                 card.querySelectorAll('input, select, textarea').forEach(element => {
                     element.disabled = true;
                     element.style.display = 'none';
                 });
 
-                // Hide input groups
                 const scodeInputGroup = document.getElementById('scodeInputGroup');
                 if (scodeInputGroup) {
                     scodeInputGroup.style.display = 'none';
                 }
 
-                // Update scode text from input
                 const scodeText = document.getElementById('scodeText');
                 const scodeInput = document.getElementById('scodeInput');
                 if (scodeText && scodeInput) {
@@ -2641,22 +2811,18 @@ foreach ($card_access_levels as $card => $required_level) {
                     scodeText.style.display = 'inline';
                 }
 
-                // Show all text spans
                 card.querySelectorAll('span[id$="Text"]').forEach(span => {
                     span.style.display = 'inline';
                 });
 
-                // Show edit icon, hide save
                 const editIcon = card.querySelector('.edit-icon');
                 const saveIcon = card.querySelector('.save-icon');
                 if (editIcon) editIcon.style.display = 'inline';
                 if (saveIcon) saveIcon.style.display = 'none';
 
             } else {
-                // Switch to edit mode
                 card.classList.add('editing');
 
-                // Show and enable all inputs
                 card.querySelectorAll('input, select, textarea').forEach(element => {
                     element.disabled = false;
                     if (element.type === 'file') {
@@ -2666,34 +2832,28 @@ foreach ($card_access_levels as $card => $required_level) {
                     }
                 });
 
-                // Show scode input group
                 const scodeInputGroup = document.getElementById('scodeInputGroup');
                 if (scodeInputGroup) {
                     scodeInputGroup.style.display = 'flex';
                 }
 
-                // Hide scode text
                 const scodeText = document.getElementById('scodeText');
                 if (scodeText) {
                     scodeText.style.display = 'none';
                 }
 
-                // Hide other text spans
                 card.querySelectorAll('span[id$="Text"]').forEach(span => {
                     const fieldName = span.id.replace('Text', '');
-                    // Keep photourl text visible if it's a link
                     if (fieldName !== 'photourl') {
                         span.style.display = 'none';
                     }
                 });
 
-                // Hide edit icon, show save
                 const editIcon = card.querySelector('.edit-icon');
                 const saveIcon = card.querySelector('.save-icon');
                 if (editIcon) editIcon.style.display = 'none';
                 if (saveIcon) saveIcon.style.display = 'inline';
 
-                // Show same address checkbox if applicable
                 const sameAddressCheckbox = document.getElementById('sameAddressCheckbox');
                 if (sameAddressCheckbox && cardId === 'address_details_card') {
                     sameAddressCheckbox.style.display = 'block';
@@ -2701,16 +2861,14 @@ foreach ($card_access_levels as $card => $required_level) {
             }
         }
 
-        // Use the PHP array you just created
+        // Use the PHP array
         const requiredFields = <?php echo json_encode($required_fields_with_names); ?>;
 
-        // Modified saveChanges function that validates ALL visible fields in ALL cards
+        // Save changes with validation
         function saveChanges(cardId) {
-            // Get ALL cards, not just the current one
             const allCards = document.querySelectorAll('.card[id$="_card"]');
             let missingFields = [];
 
-            // Check ALL visible inputs in ALL cards
             allCards.forEach(card => {
                 const visibleInputs = card.querySelectorAll('input:not([type="hidden"]), select, textarea');
 
@@ -2718,16 +2876,12 @@ foreach ($card_access_levels as $card => $required_level) {
                     if (input.style.display !== 'none' && !input.disabled) {
                         const fieldName = input.name;
 
-                        // Check if this field is in required fields
                         if (requiredFields[fieldName]) {
                             const value = input.value ? input.value.trim() : '';
 
-                            // For select elements, check if a valid option is selected
                             if (input.tagName === 'SELECT' && (!value || value === '')) {
                                 missingFields.push(requiredFields[fieldName]);
-                            }
-                            // For other inputs, check if empty
-                            else if (!value) {
+                            } else if (!value) {
                                 missingFields.push(requiredFields[fieldName]);
                             }
                         }
@@ -2735,13 +2889,11 @@ foreach ($card_access_levels as $card => $required_level) {
                 });
             });
 
-            // If there are missing fields, show alert and prevent submission
             if (missingFields.length > 0) {
                 alert(`Please fill ${missingFields.length} required field(s): ${missingFields.join(', ')}`);
                 return false;
             }
 
-            // If validation passes, submit the form
             document.getElementById('studentProfileForm').submit();
             return true;
         }
@@ -2777,7 +2929,6 @@ foreach ($card_access_levels as $card => $required_level) {
                 });
             }
 
-            // Handle tab clicks
             document.querySelectorAll('.nav-link[data-bs-toggle="tab"]').forEach(link => {
                 link.addEventListener('click', function(e) {
                     const tabId = this.getAttribute('href').substring(1);
@@ -2789,7 +2940,6 @@ foreach ($card_access_levels as $card => $required_level) {
                 });
             });
 
-            // Check for tab parameter on page load
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
 
@@ -2797,7 +2947,6 @@ foreach ($card_access_levels as $card => $required_level) {
                 activateTab(tabParam);
             }
 
-            // Handle browser back/forward
             window.addEventListener('popstate', function(event) {
                 if (event.state && event.state.tab) {
                     activateTab(event.state.tab);
@@ -2809,64 +2958,52 @@ foreach ($card_access_levels as $card => $required_level) {
         function handleStatusChange(selectElement) {
             const newStatus = selectElement.value;
 
-            // Get the inputs - they might be hidden if not in edit mode
             const effectiveFromInput = document.getElementById('effectivefrom');
             const remarksTextarea = document.getElementById('remarks');
 
-            // Check if we're in edit mode (inputs are visible)
             const isEditMode = selectElement.style.display !== 'none';
 
             if (!isEditMode) {
-                // If not in edit mode, show a simple alert
                 alert('Please click the edit pencil icon first to enable editing before changing status.');
-                // Reset to original value
                 selectElement.value = selectElement.getAttribute('data-original-value') || '<?php echo $array["filterstatus"]; ?>';
                 return;
             }
 
-            // Store original value when first clicked (optional enhancement)
             if (!selectElement.hasAttribute('data-original-value')) {
                 selectElement.setAttribute('data-original-value', selectElement.value);
             }
 
-            // Check if user has access to these fields (they exist and are visible)
             const hasEffectiveFromAccess = effectiveFromInput && effectiveFromInput.style.display !== 'none';
             const hasRemarksAccess = remarksTextarea && remarksTextarea.style.display !== 'none';
 
-            // Only proceed if user has access to at least one of the related fields
             if (!hasEffectiveFromAccess && !hasRemarksAccess) {
                 console.log('User does not have access to related fields');
                 return;
             }
 
-            // Get current values
             const currentEffectiveFrom = hasEffectiveFromAccess ? effectiveFromInput.value : '';
             const currentRemarks = hasRemarksAccess ? remarksTextarea.value : '';
 
-            // Prepare the new remark line
-            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
             let newRemarkLine = `\n${today} - Status has been changed to ${newStatus}.`;
 
-            // If changing to Active, reset effective from date but mention previous date in remarks
             if (newStatus === 'Active') {
                 if (hasEffectiveFromAccess && currentEffectiveFrom) {
                     newRemarkLine = `\nPrevious Effective From: ${currentEffectiveFrom}${newRemarkLine}`;
-                    effectiveFromInput.value = ''; // Reset effective from date
+                    effectiveFromInput.value = '';
                 }
-            }
-            // If changing to Inactive, set effective from date to today if empty
-            else if (newStatus === 'Inactive') {
+            } else if (newStatus === 'Inactive') {
                 if (hasEffectiveFromAccess && !currentEffectiveFrom) {
                     effectiveFromInput.value = today;
                 }
             }
 
-            // Update remarks if user has access
             if (hasRemarksAccess) {
                 remarksTextarea.value = currentRemarks + newRemarkLine;
             }
         }
     </script>
+
     <!-- Update Plan Modal -->
     <div class="modal fade" id="updatePlanModal-<?php echo $array['student_id']; ?>" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="updatePlanModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -2900,6 +3037,21 @@ foreach ($card_access_levels as $card => $required_level) {
                                 <?php } ?>
                             </select>
                             <small class="form-text text-muted" id="modal-class-help-<?php echo $array['student_id']; ?>">Please select the class the student wants to join.</small>
+                        </div>
+
+                        <!-- Location Dropdown -->
+                        <div class="mb-3">
+                            <label for="modal-location-select-<?php echo $array['student_id']; ?>" class="form-label">Location:</label>
+                            <select class="form-select" id="modal-location-select-<?php echo $array['student_id']; ?>" required>
+                                <option value="">--Select Location--</option>
+                                <?php foreach ($locationsList as $loc): ?>
+                                    <option value="<?= (int)$loc['id'] ?>"
+                                        <?= (!empty($array['preferredbranch']) && strtolower(trim($array['preferredbranch'])) === strtolower(trim($loc['name']))) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($loc['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="form-text text-muted">Please select the location where the student will attend.</small>
                         </div>
 
                         <div class="mb-3">
@@ -2968,11 +3120,13 @@ foreach ($card_access_levels as $card => $required_level) {
                                 <tr>
                                     <th>Plan Type</th>
                                     <th>Class</th>
+                                    <th>Location</th>
                                     <th>Effective From</th>
                                     <th>Effective Until</th>
                                     <th>Remarks</th>
                                     <th>Changed On</th>
                                     <th>Changed By</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="planHistoryBody-<?php echo $array['student_id']; ?>">
@@ -2993,6 +3147,7 @@ foreach ($card_access_levels as $card => $required_level) {
             </div>
         </div>
     </div>
+
     <script>
         $(document).ready(function() {
             // When update modal opens, populate fields with current values
@@ -3002,6 +3157,17 @@ foreach ($card_access_levels as $card => $required_level) {
                 $('#modal-division-select-' + studentId).val('<?php echo $array["division"] ?? ""; ?>');
                 $('#modal-class-select-' + studentId).val('<?php echo $array["class"] ?? ""; ?>');
                 $('#modal-type-of-admission-' + studentId).val('<?php echo $array["type_of_admission"] ?? ""; ?>');
+
+                // Pre-select location by matching the preferredbranch name against option text
+                const currentLocationName = '<?php echo addslashes($array["preferredbranch"] ?? ""); ?>';
+                if (currentLocationName) {
+                    $('#modal-location-select-' + studentId + ' option').each(function() {
+                        if ($(this).text().trim().toLowerCase() === currentLocationName.trim().toLowerCase()) {
+                            $(this).prop('selected', true);
+                            return false; // break
+                        }
+                    });
+                }
 
                 // Always keep Effective From blank
                 $('#modal-effective-from-date-' + studentId).val('');
@@ -3026,7 +3192,6 @@ foreach ($card_access_levels as $card => $required_level) {
                 const classSelect = $('#modal-class-select-' + studentId)[0];
                 const helpText = $('#modal-class-help-' + studentId)[0];
 
-                // Reset and disable the select initially
                 classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
                 classSelect.disabled = !division;
 
@@ -3035,7 +3200,6 @@ foreach ($card_access_levels as $card => $required_level) {
                     return;
                 }
 
-                // Create and show loading spinner
                 const spinner = document.createElement('span');
                 spinner.className = 'spinner-border spinner-border-sm ms-2';
                 spinner.setAttribute('role', 'status');
@@ -3043,13 +3207,11 @@ foreach ($card_access_levels as $card => $required_level) {
                 helpText.innerHTML = 'Loading classes... ';
                 helpText.appendChild(spinner);
 
-                // Determine API URL based on host
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 const apiUrl = isLocalhost ?
                     'http://localhost:8082/get_classes.php' :
                     'https://login.rssi.in/get_classes.php';
 
-                // Fetch classes via AJAX
                 fetch(`${apiUrl}?division=${encodeURIComponent(division)}`)
                     .then(response => {
                         if (!response.ok) {
@@ -3062,7 +3224,6 @@ foreach ($card_access_levels as $card => $required_level) {
                             throw new Error(data.error || 'Failed to load classes');
                         }
 
-                        // Create new select with placeholder selected by default
                         classSelect.innerHTML = '<option value="" selected>--Select Class--</option>';
 
                         if (data.data.length === 0) {
@@ -3081,10 +3242,8 @@ foreach ($card_access_levels as $card => $required_level) {
                             classSelect.appendChild(option);
                         });
 
-                        // If there was a previous selection, try to preserve it
                         const previousSelection = '<?php echo $array["class"] ?? ""; ?>';
                         if (previousSelection) {
-                            // Check if the previous selection exists in the new options
                             const optionExists = Array.from(classSelect.options).some(
                                 option => option.value === previousSelection
                             );
@@ -3107,7 +3266,6 @@ foreach ($card_access_levels as $card => $required_level) {
                     })
                     .finally(() => {
                         classSelect.disabled = false;
-                        // Remove spinner if it still exists
                         if (spinner.parentNode === helpText) {
                             helpText.removeChild(spinner);
                         }
@@ -3118,7 +3276,6 @@ foreach ($card_access_levels as $card => $required_level) {
                 const admissionSelect = $('#modal-type-of-admission-' + studentId)[0];
                 const helpText = $('#modal-type-of-admission-help-' + studentId)[0];
 
-                // Reset and disable the select initially
                 admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
                 admissionSelect.disabled = !division;
 
@@ -3127,7 +3284,6 @@ foreach ($card_access_levels as $card => $required_level) {
                     return;
                 }
 
-                // Create and show loading spinner
                 const spinner = document.createElement('span');
                 spinner.className = 'spinner-border spinner-border-sm ms-2';
                 spinner.setAttribute('role', 'status');
@@ -3135,13 +3291,11 @@ foreach ($card_access_levels as $card => $required_level) {
                 helpText.innerHTML = 'Loading plans... ';
                 helpText.appendChild(spinner);
 
-                // Determine API URL based on host
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 const apiUrl = isLocalhost ?
                     'http://localhost:8082/get_plans.php' :
                     'https://login.rssi.in/get_plans.php';
 
-                // Fetch plans via AJAX
                 fetch(`${apiUrl}?division=${division}`)
                     .then(response => {
                         if (!response.ok) {
@@ -3150,7 +3304,6 @@ foreach ($card_access_levels as $card => $required_level) {
                         return response.json();
                     })
                     .then(plans => {
-                        // Create new select with placeholder selected by default
                         admissionSelect.innerHTML = '<option value="" selected>--Select Access Category--</option>';
 
                         if (plans.length === 0) {
@@ -3169,10 +3322,8 @@ foreach ($card_access_levels as $card => $required_level) {
                             admissionSelect.appendChild(option);
                         });
 
-                        // If there was a previous selection, try to preserve it
                         const previousSelection = '<?php echo $array["type_of_admission"] ?? ""; ?>';
                         if (previousSelection) {
-                            // Check if the previous selection exists in the new options
                             const optionExists = Array.from(admissionSelect.options).some(
                                 option => option.value === previousSelection
                             );
@@ -3195,7 +3346,6 @@ foreach ($card_access_levels as $card => $required_level) {
                     })
                     .finally(() => {
                         admissionSelect.disabled = false;
-                        // Remove spinner if it still exists
                         if (spinner.parentNode === helpText) {
                             helpText.removeChild(spinner);
                         }
@@ -3209,21 +3359,33 @@ foreach ($card_access_levels as $card => $required_level) {
 
                 const division = $('#modal-division-select-' + studentId).val();
                 const classVal = $('#modal-class-select-' + studentId).val();
+                const locationId = $('#modal-location-select-' + studentId).val();
                 const admissionType = $('#modal-type-of-admission-' + studentId).val();
                 const effectiveMonth = $('#modal-effective-from-date-' + studentId).val();
                 const remarks = $('#modal-remarks-' + studentId).val();
 
+                // Normalization helper for comparing names robustly
+                const norm = s => (s || '').trim().toLowerCase();
+
                 // Current values from server
                 const currentClass = '<?php echo $array["class"] ?? ""; ?>';
                 const currentAdmissionType = '<?php echo $array["type_of_admission"] ?? ""; ?>';
+                const currentLocationDisplay = '<?php echo addslashes($array["preferredbranch"] ?? ""); ?>';
+                const currentLocationName = norm(currentLocationDisplay);
 
                 // Detect changes
                 const classChanged = classVal && classVal !== currentClass;
                 const admissionTypeChanged = admissionType && admissionType !== currentAdmissionType;
                 const dateChanged = !!effectiveMonth;
 
-                // Nothing changed
-                if (!classChanged && !admissionTypeChanged && !dateChanged) {
+                const newLocationDisplay = locationId ?
+                    $('#modal-location-select-' + studentId + ' option[value="' + locationId + '"]').text().trim() :
+                    '';
+                const newLocationName = norm(newLocationDisplay);
+                const locationChanged = locationId && newLocationName !== currentLocationName;
+
+                // Nothing changed — only one combined check
+                if (!classChanged && !admissionTypeChanged && !dateChanged && !locationChanged) {
                     alert('No changes detected. Please modify at least one field.');
                     return;
                 }
@@ -3249,6 +3411,11 @@ foreach ($card_access_levels as $card => $required_level) {
                     return;
                 }
 
+                if (!locationId) {
+                    alert('Please select a location.');
+                    return;
+                }
+
                 // Format effective date (Month Year)
                 const [year, month] = effectiveMonth.split('-');
                 const dateObj = new Date(year, month - 1);
@@ -3260,6 +3427,7 @@ foreach ($card_access_levels as $card => $required_level) {
                 // Resolve final values (new plan)
                 const newPlanType = admissionTypeChanged ? admissionType : currentAdmissionType;
                 const newClass = classChanged ? classVal : currentClass;
+                const newLocation = locationChanged ? newLocationDisplay : currentLocationDisplay;
 
                 // Build clear confirmation message
                 let confirmationMessage = '';
@@ -3268,11 +3436,13 @@ foreach ($card_access_levels as $card => $required_level) {
 
                 confirmationMessage += 'CURRENT PLAN:\n';
                 confirmationMessage += `• Plan Type : ${currentAdmissionType || 'N/A'}\n`;
-                confirmationMessage += `• Class     : ${currentClass || 'N/A'}\n\n`;
+                confirmationMessage += `• Class     : ${currentClass || 'N/A'}\n`;
+                confirmationMessage += `• Location  : ${currentLocationDisplay || 'N/A'}\n\n`;
 
                 confirmationMessage += 'NEW PLAN:\n';
                 confirmationMessage += `• Plan Type : ${newPlanType}\n`;
                 confirmationMessage += `• Class     : ${newClass}\n`;
+                confirmationMessage += `• Location  : ${newLocation}\n`;
                 confirmationMessage += `• Effective From : ${effectiveDateDisplay}\n\n`;
 
                 confirmationMessage += 'This change will update the student’s plan history.\n';
@@ -3284,6 +3454,7 @@ foreach ($card_access_levels as $card => $required_level) {
                         studentId,
                         newClass,
                         newPlanType,
+                        locationId,
                         effectiveMonth + '-01',
                         remarks
                     );
@@ -3291,7 +3462,7 @@ foreach ($card_access_levels as $card => $required_level) {
             });
 
             // Simple submit function
-            function submitPlanUpdate(studentId, classVal, admissionType, effectiveFromDate, remarks) {
+            function submitPlanUpdate(studentId, classVal, admissionType, locationId, effectiveFromDate, remarks) {
                 const mainForm = document.getElementById('studentProfileForm');
 
                 // Add hidden inputs
@@ -3308,34 +3479,33 @@ foreach ($card_access_levels as $card => $required_level) {
 
                 addHiddenInput('plan_update_class', classVal);
                 addHiddenInput('plan_update_type_of_admission', admissionType);
+                addHiddenInput('plan_update_location_id', locationId);
                 addHiddenInput('plan_update_effective_from_date', effectiveFromDate);
-                addHiddenInput('plan_update_remarks', remarks)
+                addHiddenInput('plan_update_remarks', remarks);
 
                 // Close modal and submit
                 $('#updatePlanModal-' + studentId).modal('hide');
                 setTimeout(() => mainForm.submit(), 300);
             }
         });
+
         // Load plan history when modal opens
         $('[id^="planHistoryModal-"]').on('show.bs.modal', function() {
             const modalId = $(this).attr('id');
             const studentId = modalId.split('-').pop();
 
-            // Get references to elements
             const loadingEl = $('#planHistoryLoading-' + studentId);
             const contentEl = $('#planHistoryContent-' + studentId);
             const emptyEl = $('#planHistoryEmpty-' + studentId);
             const errorEl = $('#planHistoryError-' + studentId);
             const bodyEl = $('#planHistoryBody-' + studentId);
 
-            // Reset UI states
             loadingEl.show();
             contentEl.hide();
             emptyEl.hide();
             errorEl.hide();
             bodyEl.empty();
 
-            // Load history via AJAX
             $.ajax({
                 url: 'get_plan_history.php',
                 type: 'GET',
@@ -3348,13 +3518,12 @@ foreach ($card_access_levels as $card => $required_level) {
 
                     if (response.success && response.data.length > 0) {
                         let html = '';
-                        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                        const today = new Date().toISOString().split('T')[0];
 
                         response.data.forEach(function(plan) {
                             const effectiveFrom = plan.effective_from;
                             const effectiveUntil = plan.effective_until;
 
-                            // Determine if this is the current active plan
                             let isCurrent = false;
                             if (effectiveUntil === null) {
                                 isCurrent = (today >= effectiveFrom);
@@ -3393,20 +3562,68 @@ foreach ($card_access_levels as $card => $required_level) {
                                 hour12: true
                             });
 
-                            // Show name with ID in parentheses
                             const creatorDisplay = plan.created_by_name === plan.created_by_id ?
                                 plan.created_by_id :
                                 `${plan.created_by_name} (${plan.created_by_id})`;
 
+                            //     html += `<tr class="${rowClass}">
+                            //     <td>${escapeHtml(plan.category_type)}</td>
+                            //     <td>${escapeHtml(plan.class || '')}</td>
+                            //     <td>${escapeHtml(plan.location_name || 'N/A')}</td>
+                            //     <td>${fromFormatted}</td>
+                            //     <td>${untilFormatted}</td>
+                            //     <td>${escapeHtml(plan.remarks)}</td>
+                            //     <td>${createdFormatted}</td>
+                            //     <td>${escapeHtml(creatorDisplay)}</td>
+                            //     <td>
+                            //         <button class="btn btn-sm btn-outline-primary edit-history-btn"
+                            //             data-bs-toggle="modal"
+                            //             data-bs-target="#editHistoryModal"
+                            //             data-history-id="${plan.id}"
+                            //             data-effective-until="${plan.effective_until || ''}"
+                            //             data-is-valid="${plan.is_valid ? '1' : '0'}"
+                            //             data-remarks="${escapeHtml(plan.remarks || '')}"
+                            //             data-plan-type="${escapeHtml(plan.category_type || '')}"
+                            //             data-class="${escapeHtml(plan.class || '')}"
+                            //             data-student-id="${studentId}">
+                            //             <i class="bi bi-pencil"></i> Edit
+                            //         </button>
+                            //     </td>
+                            // </tr>`;
+                            const hasOpenEnd = !plan.effective_until;
+                            const isActiveRow = hasOpenEnd || (plan.is_valid == 1 && !plan.effective_until);
+
+                            // Rule:
+                            //   Admin      → edit allowed on ALL rows
+                            //   Non-Admin  → edit allowed ONLY on active (open-ended) rows
+                            const canEdit = IS_ADMIN ? true : hasOpenEnd;
+
                             html += `<tr class="${rowClass}">
-                        <td>${escapeHtml(plan.category_type)}</td>
-                        <td>${escapeHtml(plan.class || '')}</td>
-                        <td>${fromFormatted}</td>
-                        <td>${untilFormatted}</td>
-                        <td>${escapeHtml(plan.remarks)}</td>
-                        <td>${createdFormatted}</td>
-                        <td>${escapeHtml(creatorDisplay)}</td>
-                    </tr>`;
+                            <td>${escapeHtml(plan.category_type)}</td>
+                            <td>${escapeHtml(plan.class || '')}</td>
+                            <td>${escapeHtml(plan.location_name || 'N/A')}</td>
+                            <td>${fromFormatted}</td>
+                            <td>${untilFormatted}</td>
+                            <td>${escapeHtml(plan.remarks)}</td>
+                            <td>${createdFormatted}</td>
+                            <td>${escapeHtml(creatorDisplay)}</td>
+                            <td>
+                                ${canEdit ? `
+                                    <button class="btn btn-sm btn-outline-primary edit-history-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editHistoryModal"
+                                        data-history-id="${plan.id}"
+                                        data-effective-until="${plan.effective_until || ''}"
+                                        data-is-valid="${plan.is_valid ? '1' : '0'}"
+                                        data-remarks="${escapeHtml(plan.remarks || '')}"
+                                        data-plan-type="${escapeHtml(plan.category_type || '')}"
+                                        data-class="${escapeHtml(plan.class || '')}"
+                                        data-student-id="${studentId}">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                ` : `<span class="text-muted small">Closed</span>`}
+                            </td>
+                        </tr>`;
                         });
 
                         bodyEl.html(html);
@@ -3422,14 +3639,56 @@ foreach ($card_access_levels as $card => $required_level) {
             });
         });
 
-        // Helper function to escape HTML - FIXED VERSION
+        // Populate the edit modal from the clicked button
+        $('#editHistoryModal').on('show.bs.modal', function(event) {
+            const $trigger = $(event.relatedTarget);
+
+            if (!$trigger || !$trigger.hasClass('edit-history-btn')) return;
+
+            const id = $trigger.data('history-id');
+            const effectiveUntil = $trigger.data('effective-until') || '';
+            const isValid = $trigger.data('is-valid') == '1';
+            const remarks = $trigger.data('remarks') || '';
+            const planType = $trigger.data('plan-type') || '';
+            const classVal = $trigger.data('class') || '';
+            const studentId = $trigger.data('student-id');
+
+            $('#editHistoryId').val(id);
+            $('#editEffectiveUntil').val(effectiveUntil ? effectiveUntil.substring(0, 10) : '');
+            $('#editIsValid').val(isValid ? '1' : '0');
+            $('#editRemarks').val(remarks);
+            $('#editHistoryMeta').text(`${planType} / ${classVal}`);
+
+            $('#editHistoryModal').data('student-id', studentId);
+
+            $('#editHistoryAlert').addClass('d-none').text('');
+        });
+
+        // Back to History button
+        $(document).on('click', '.back-to-history-btn', function() {
+            const studentId = $('#editHistoryModal').data('student-id');
+            const editModalEl = document.getElementById('editHistoryModal');
+            const editModalInstance = bootstrap.Modal.getInstance(editModalEl);
+
+            if (editModalInstance) editModalInstance.hide();
+
+            if (studentId) {
+                editModalEl.addEventListener('hidden.bs.modal', function handler() {
+                    editModalEl.removeEventListener('hidden.bs.modal', handler);
+                    const historyModalEl = document.getElementById('planHistoryModal-' + studentId);
+                    if (historyModalEl) {
+                        new bootstrap.Modal(historyModalEl).show();
+                    }
+                });
+            }
+        });
+
+        // Helper function to escape HTML
         function escapeHtml(text) {
-            // Handle null, undefined, or empty values
             if (text === null || text === undefined || text === '') {
                 return '';
             }
 
-            // Convert to string
             const stringText = String(text);
 
             const map = {
@@ -3467,17 +3726,15 @@ foreach ($card_access_levels as $card => $required_level) {
                 minimumInputLength: 2,
                 placeholder: 'Search by Student ID or Name',
                 allowClear: true,
-                width: '100%', // Ensure proper width
+                width: '100%',
             });
 
             // Pre-select if URL has student_id parameter
             <?php if (!empty($_GET['student_id'])): ?>
                 var currentStudentId = '<?php echo $_GET['student_id']; ?>';
 
-                // If it's already in the dropdown, select it
                 var $studentSelect = $('#student_id');
                 if ($studentSelect.find('option[value="' + currentStudentId + '"]').length === 0) {
-                    // Fetch student name and add to dropdown
                     $.ajax({
                         url: 'fetch_students.php',
                         data: {
@@ -3496,7 +3753,6 @@ foreach ($card_access_levels as $card => $required_level) {
                                 );
                                 $studentSelect.append(option).trigger('change');
                             } else {
-                                // Just show the ID if we can't find details
                                 var option = new Option(
                                     currentStudentId,
                                     currentStudentId,
@@ -3521,10 +3777,10 @@ foreach ($card_access_levels as $card => $required_level) {
             });
         });
     </script>
+
     <!-- Add tooltip functionality if needed -->
     <script>
         $(document).ready(function() {
-            // Add tooltip to status flag
             $('.status-flag').each(function() {
                 var status = $(this).data('status');
                 var tooltipText = 'Student Status: ' + status;
@@ -3534,13 +3790,11 @@ foreach ($card_access_levels as $card => $required_level) {
                 $(this).attr('data-bs-placement', 'top');
             });
 
-            // Initialize Bootstrap tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            // Optional: Add click to copy status
             $('.status-flag').on('click', function() {
                 var status = $(this).data('status');
                 navigator.clipboard.writeText(status).then(function() {
@@ -3551,6 +3805,80 @@ foreach ($card_access_levels as $card => $required_level) {
                         $('.status-flag .flag-text').text(originalText);
                     }, 1000);
                 }.bind(this));
+            });
+        });
+    </script>
+
+    <script>
+        // ============================================
+        // PLAN HISTORY EDIT
+        // ============================================
+
+        // Submit the edit form
+        $('#editHistoryForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const $btn = $('#editHistorySubmitBtn');
+            const originalBtnHtml = $btn.html();
+
+            $btn.prop('disabled', true)
+                .html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+            $('#editHistoryAlert').addClass('d-none');
+
+            const payload = {
+                id: $('#editHistoryId').val(),
+                effective_until: $('#editEffectiveUntil').val(),
+                is_valid: $('#editIsValid').val() === '1' ? 'true' : 'false',
+                remarks: $('#editRemarks').val()
+            };
+
+            $.ajax({
+                url: 'update_plan_history.php',
+                type: 'POST',
+                data: payload,
+                dataType: 'json',
+                success: function(response) {
+                    $btn.prop('disabled', false).html(originalBtnHtml);
+
+                    if (response.success) {
+                        $('#editHistoryAlert')
+                            .removeClass('d-none alert-danger')
+                            .addClass('alert-success')
+                            .text(response.message || 'Updated successfully.');
+
+                        const studentId = $('#editHistoryModal').data('student-id');
+
+                        setTimeout(() => {
+                            const editModalEl = document.getElementById('editHistoryModal');
+                            const editModalInstance = bootstrap.Modal.getInstance(editModalEl);
+                            if (editModalInstance) editModalInstance.hide();
+
+                            if (studentId) {
+                                editModalEl.addEventListener('hidden.bs.modal', function handler() {
+                                    editModalEl.removeEventListener('hidden.bs.modal', handler);
+
+                                    const historyModalEl = document.getElementById('planHistoryModal-' + studentId);
+                                    if (historyModalEl) {
+                                        const historyModal = new bootstrap.Modal(historyModalEl);
+                                        historyModal.show();
+                                    }
+                                });
+                            }
+                        }, 700);
+                    } else {
+                        $('#editHistoryAlert')
+                            .removeClass('d-none alert-success')
+                            .addClass('alert-danger')
+                            .text(response.error || 'Update failed.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $btn.prop('disabled', false).html(originalBtnHtml);
+                    $('#editHistoryAlert')
+                        .removeClass('d-none alert-success')
+                        .addClass('alert-danger')
+                        .text('Request failed: ' + error);
+                }
             });
         });
     </script>

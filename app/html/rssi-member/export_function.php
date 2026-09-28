@@ -930,12 +930,9 @@ holidays_in_range AS (
 
 -- 4) Student exceptions in range
 student_exceptions AS (
-    SELECT
-        m.student_id,
-        e.exception_date AS attendance_date
-    FROM student_class_days_exceptions e
-    JOIN student_exception_mapping m ON e.exception_id = m.exception_id
-    WHERE e.exception_date BETWEEN $startDateEsc::date AND $endDateEsc::date
+    SELECT DISTINCT student_id, exception_date AS attendance_date
+    FROM v_exception_students
+    WHERE exception_date BETWEEN '$startDate'::date AND '$endDate'::date
 ),
 
 -- 5) Calendar days in range

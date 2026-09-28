@@ -9,146 +9,173 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
+
 $is_admin = ($role == 'Admin');
 $is_centreIncharge = ($position == 'Centre Incharge' || $position == 'Senior Centre Incharge');
 
-// Permission check
 if (!$is_admin && !$is_centreIncharge) {
     echo "<script>
         alert('Access Denied. You do not have permission to access this page.');
-        window.location.href = 'index.php'; // redirect to homepage
+        window.location.href = 'index.php';
     </script>";
-    exit; // Stop further execution
+    exit;
 }
 
+/* =========================================================
+   HANDLER 1 — Filter students (student scope only)
+   ========================================================= */
 if (@$_POST['form-type'] == "exception_filter") {
-    $class = $_POST['class'] ?? [];
-    $category = $_POST['category'] ?? [];
-    $student_ids = $_POST['student_ids'] ?? [];
-    $excluded_ids = $_POST['excluded_ids'] ?? [];
+    $class        = $_POST['class']         ?? [];
+    $category     = $_POST['category']      ?? [];
+    $student_ids  = $_POST['student_ids']   ?? [];
+    $excluded_ids = $_POST['excluded_ids']  ?? [];
 
-    $query = "SELECT student_id, studentname, category, class FROM rssimyprofile_student WHERE filterstatus='Active'";
+    $query = "SELECT student_id, studentname, category, class
+              FROM rssimyprofile_student
+              WHERE filterstatus = 'Active'";
     $conditions = [];
 
     if (!empty($class)) {
         $class_list = implode("','", array_map(fn($c) => pg_escape_string($con, $c), $class));
         $conditions[] = "class IN ('$class_list')";
     }
-
     if (!empty($category)) {
         $category_list = implode("','", array_map(fn($c) => pg_escape_string($con, $c), $category));
         $conditions[] = "category IN ('$category_list')";
     }
-
     if (!empty($student_ids)) {
-        $student_ids_list = implode("','", array_map(fn($id) => pg_escape_string($con, $id), $student_ids));
-        $conditions[] = "student_id IN ('$student_ids_list')";
+        $ids_list = implode("','", array_map(fn($id) => pg_escape_string($con, $id), $student_ids));
+        $conditions[] = "student_id IN ('$ids_list')";
     }
-
     if (!empty($excluded_ids)) {
-        $excluded_ids_list = implode("','", array_map(fn($id) => pg_escape_string($con, $id), $excluded_ids));
-        $conditions[] = "student_id NOT IN ('$excluded_ids_list')";
+        $excl_list = implode("','", array_map(fn($id) => pg_escape_string($con, $id), $excluded_ids));
+        $conditions[] = "student_id NOT IN ('$excl_list')";
     }
 
     if (!empty($conditions)) {
         $query .= " AND " . implode(" AND ", $conditions);
-    } else {
-        $resultArr = null;
-    }
-
-    $result = pg_query($con, $query);
-
-    if (!$result) {
-        echo "An error occurred.\n";
-        exit;
-    }
-
-    if (!empty($conditions)) {
+        $result = pg_query($con, $query);
+        if (!$result) {
+            echo "An error occurred.\n";
+            exit;
+        }
         $resultArr = pg_fetch_all($result);
         $_SESSION['filtered_results'] = $resultArr;
+    } else {
+        $resultArr = null;
+        $_SESSION['filtered_results'] = null;
     }
 }
 
+/* =========================================================
+   HANDLER 2 — Create exception
+   ========================================================= */
 if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
-    $successMessages = [];
-
-    if (isset($_SESSION['filtered_results'])) {
-        $resultArr = $_SESSION['filtered_results'];
-    } else {
-        echo "Filtered results not available. Please apply filters first.\n";
-        exit;
-    }
-
-    $reason = $_POST['reason'];
+    $scope_type = $_POST['scope_type'] ?? 'student';
+    $reason     = $_POST['reason'] ?? '';
     $created_by = $associatenumber;
 
-    // Check if multiple days selected
+    $scope_class    = null;
+    $scope_category = null;
+
+    if ($scope_type === 'class') {
+        $scope_class = $_POST['scope_class'] ?? null;
+        if (empty($scope_class)) {
+            echo "Please select a class.";
+            exit;
+        }
+    } elseif ($scope_type === 'class_category') {
+        $scope_class    = $_POST['scope_class']    ?? null;
+        $scope_category = $_POST['scope_category'] ?? null;
+        if (empty($scope_class) || empty($scope_category)) {
+            echo "Please select both class and category.";
+            exit;
+        }
+    } elseif ($scope_type === 'category') {
+        $scope_category = $_POST['scope_category'] ?? null;
+        if (empty($scope_category)) {
+            echo "Please select a category.";
+            exit;
+        }
+    } else { // student
+        if (empty($_SESSION['filtered_results'])) {
+            echo "Filtered results not available. Please apply filters first.\n";
+            exit;
+        }
+        $resultArr = $_SESSION['filtered_results'];
+    }
+
+    // Build date list
+    $dates = [];
     if (!empty($_POST['multiple_days'])) {
-        $start_date = $_POST['start_date'];
-        $end_date   = $_POST['end_date'];
-
-        // Generate date range
+        $start = $_POST['start_date'] ?? '';
+        $end   = $_POST['end_date']   ?? '';
+        if (!$start || !$end) {
+            echo "Start and end dates required.";
+            exit;
+        }
         $period = new DatePeriod(
-            new DateTime($start_date),
+            new DateTime($start),
             new DateInterval('P1D'),
-            (new DateTime($end_date))->modify('+1 day') // inclusive
+            (new DateTime($end))->modify('+1 day')
         );
+        foreach ($period as $d) {
+            $dates[] = $d->format('Y-m-d');
+        }
+    } else {
+        $single = $_POST['exception_date'] ?? '';
+        if (!$single) {
+            echo "Exception date required.";
+            exit;
+        }
+        $dates[] = $single;
+    }
 
-        foreach ($period as $date) {
-            $exception_date = $date->format("Y-m-d");
+    $successMessages = [];
+    pg_query($con, "BEGIN");
 
-            // Insert exception record
-            $exception_sql = "INSERT INTO student_class_days_exceptions (exception_date, reason, created_by) 
-                              VALUES ($1, $2, $3) RETURNING exception_id";
-            $params = array($exception_date, $reason, $created_by);
-            $exception_result = pg_query_params($con, $exception_sql, $params);
+    foreach ($dates as $exception_date) {
+        $sql = "INSERT INTO student_class_days_exceptions
+                    (exception_date, reason, created_by, scope_type, scope_class, scope_category)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING exception_id";
+        $res = pg_query_params($con, $sql, [
+            $exception_date,
+            $reason,
+            $created_by,
+            $scope_type,
+            $scope_class,
+            $scope_category
+        ]);
+        if (!$res) {
+            pg_query($con, "ROLLBACK");
+            echo "Error creating exception record: " . pg_last_error($con);
+            exit;
+        }
+        $exception_id = pg_fetch_result($res, 0, 'exception_id');
 
-            if (!$exception_result) {
-                echo "Error creating exception record.\n";
-                exit;
-            }
-
-            $exception_row = pg_fetch_assoc($exception_result);
-            $exception_id = $exception_row['exception_id'];
-
-            // Insert student mappings
+        if ($scope_type === 'student') {
             foreach ($resultArr as $row) {
-                $student_id = $row['student_id'];
-                $mapping_sql = "INSERT INTO student_exception_mapping (exception_id, student_id) VALUES ($1, $2)";
-                $mapping_result = pg_query_params($con, $mapping_sql, array($exception_id, $student_id));
-
+                $mapping_result = pg_query_params(
+                    $con,
+                    "INSERT INTO student_exception_mapping (exception_id, student_id) VALUES ($1, $2)",
+                    [$exception_id, $row['student_id']]
+                );
                 if ($mapping_result) {
                     $successMessages[] = "Exception applied on $exception_date for student: " . $row['studentname'];
                 }
             }
-        }
-    } else {
-        // Single date
-        $exception_date = $_POST['exception_date'];
-
-        $exception_sql = "INSERT INTO student_class_days_exceptions (exception_date, reason, created_by) 
-                          VALUES ($1, $2, $3) RETURNING exception_id";
-        $params = array($exception_date, $reason, $created_by);
-        $exception_result = pg_query_params($con, $exception_sql, $params);
-
-        if (!$exception_result) {
-            echo "Error creating exception record.\n";
-            exit;
-        }
-
-        $exception_row = pg_fetch_assoc($exception_result);
-        $exception_id = $exception_row['exception_id'];
-
-        foreach ($resultArr as $row) {
-            $student_id = $row['student_id'];
-            $mapping_sql = "INSERT INTO student_exception_mapping (exception_id, student_id) VALUES ($1, $2)";
-            $mapping_result = pg_query_params($con, $mapping_sql, array($exception_id, $student_id));
-
-            if ($mapping_result) {
-                $successMessages[] = "Exception applied on $exception_date for student: " . $row['studentname'];
-            }
+        } else {
+            $label = $scope_type === 'class'
+                ? "class $scope_class"
+                : ($scope_type === 'class_category'
+                    ? "class $scope_class / category $scope_category"
+                    : "category $scope_category");
+            $successMessages[] = "Exception applied on $exception_date for $label";
         }
     }
+
+    pg_query($con, "COMMIT");
 
     echo "<script>
             alert('" . implode("\\n", array_unique($successMessages)) . "');
@@ -157,12 +184,30 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
             }
           </script>";
 }
+
+/* =========================================================
+   Fetch helper dropdowns
+   ========================================================= */
+$class_options = [];
+$cls_res = pg_query($con, "SELECT DISTINCT class FROM rssimyprofile_student
+                           WHERE class IS NOT NULL AND filterstatus='Active'
+                           ORDER BY class");
+if ($cls_res) {
+    $class_options = pg_fetch_all_columns($cls_res, 0);
+}
+
+$category_options = [];
+$cat_res = pg_query($con, "SELECT DISTINCT category FROM rssimyprofile_student
+                           WHERE category IS NOT NULL AND filterstatus='Active'
+                           ORDER BY category");
+if ($cat_res) {
+    $category_options = pg_fetch_all_columns($cat_res, 0);
+}
 ?>
 <!doctype html>
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -176,18 +221,13 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
-    
-    <!-- Favicons -->
+
     <link href="../img/favicon.ico" rel="icon">
-    <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css?v=1.1.0" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
             analytics: 'G-S25QWTFJ2S',
@@ -208,6 +248,29 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
         .back-link:hover {
             text-decoration: underline;
         }
+
+        .scope-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .scope-card:hover {
+            border-color: #0d6efd;
+            background: #f8f9ff;
+        }
+
+        .scope-card.active {
+            border-color: #0d6efd;
+            background: #eef4ff;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
+        }
+
+        .scope-card input[type=radio] {
+            margin-right: 8px;
+        }
     </style>
 </head>
 
@@ -219,11 +282,10 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
         <div class="pagetitle">
             <h1><?php echo getPageTitle(); ?></h1>
             <?php echo generateDynamicBreadcrumb(); ?>
-        </div><!-- End Page Title -->
+        </div>
 
         <section class="section dashboard">
             <div class="row">
-                <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
@@ -234,58 +296,83 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
                                     </a>
                                 </div>
 
-                                <h4>Select Students</h4>
-                                <div class="mb-3 py-2">
-                                    Filter students for applying class days exception using any combination of the filters below.
+                                <h4>Create Class Days Exception</h4>
+
+                                <!-- SCOPE PICKER -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Apply exception to:</label>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="scope-card d-block active" data-scope="student">
+                                                <input type="radio" name="scope_type_ui" value="student" checked>
+                                                <strong><i class="bi bi-person-lines-fill me-1"></i> Specific Students</strong>
+                                                <div class="small text-muted mt-1">Pick individual students using filters</div>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="scope-card d-block" data-scope="class">
+                                                <input type="radio" name="scope_type_ui" value="class">
+                                                <strong><i class="bi bi-people-fill me-1"></i> Entire Class</strong>
+                                                <div class="small text-muted mt-1">Applies to every student in a class</div>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="scope-card d-block" data-scope="class_category">
+                                                <input type="radio" name="scope_type_ui" value="class_category">
+                                                <strong><i class="bi bi-diagram-3-fill me-1"></i> Class + Category</strong>
+                                                <div class="small text-muted mt-1">Applies to a class within a category</div>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <form id="filterForm" method="post" action="" class="row g-2 align-items-end mb-4">
-                                    <input type="hidden" name="form-type" value="exception_filter">
 
-                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                        <label for="classes" class="form-label small mb-1">Class</label>
-                                        <select class="form-select" id="classes" name="class[]" multiple></select>
+                                <!-- STUDENT PANEL -->
+                                <div id="scope-student-panel">
+                                    <div class="mb-3 py-2">
+                                        Filter students using any combination of the filters below.
                                     </div>
+                                    <form id="filterForm" method="post" action="" class="row g-2 align-items-end mb-4">
+                                        <input type="hidden" name="form-type" value="exception_filter">
 
-                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                        <label for="categories" class="form-label small mb-1">Category</label>
-                                        <select class="form-select" id="categories" name="category[]" multiple></select>
-                                    </div>
+                                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                            <label class="form-label small mb-1">Class</label>
+                                            <select class="form-select" id="classes" name="class[]" multiple></select>
+                                        </div>
+                                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                            <label class="form-label small mb-1">Category</label>
+                                            <select class="form-select" id="categories" name="category[]" multiple></select>
+                                        </div>
+                                        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                                            <label class="form-label small mb-1">Include Student IDs</label>
+                                            <select class="form-select" id="student_ids" name="student_ids[]" multiple></select>
+                                        </div>
+                                        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                                            <label class="form-label small mb-1">Exclude Student IDs</label>
+                                            <select class="form-select" id="excluded_ids" name="excluded_ids[]" multiple></select>
+                                        </div>
+                                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-funnel-fill me-1"></i> Filter
+                                            </button>
+                                        </div>
+                                    </form>
 
-                                    <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
-                                        <label for="student_ids" class="form-label small mb-1">Include Student IDs</label>
-                                        <select class="form-select" id="student_ids" name="student_ids[]" multiple></select>
-                                    </div>
-
-                                    <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
-                                        <label for="excluded_ids" class="form-label small mb-1">Exclude Student IDs</label>
-                                        <select class="form-select" id="excluded_ids" name="excluded_ids[]" multiple></select>
-                                    </div>
-
-                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-funnel-fill me-1"></i> Filter
-                                        </button>
-                                    </div>
-                                </form>
-
-                                <?php if (isset($resultArr)) : ?>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h4 class="mb-0">Applying Exception for</h4>
-                                        <span>Total Students: <?= count($resultArr) ?></span>
-                                    </div>
-
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-bordered table-hover">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th scope="col" style="width:15%">Student ID</th>
-                                                    <th scope="col" style="width:35%">Student Name</th>
-                                                    <th scope="col" style="width:25%">Category</th>
-                                                    <th scope="col" style="width:25%">Class</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php if (!empty($resultArr)) : ?>
+                                    <?php if (isset($resultArr) && !empty($resultArr)) : ?>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="mb-0">Students in scope</h5>
+                                            <span>Total Students: <?= count($resultArr) ?></span>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width:15%">Student ID</th>
+                                                        <th style="width:35%">Student Name</th>
+                                                        <th style="width:25%">Category</th>
+                                                        <th style="width:25%">Class</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
                                                     <?php foreach ($resultArr as $student) : ?>
                                                         <tr>
                                                             <td><?= htmlspecialchars($student['student_id']) ?></td>
@@ -294,116 +381,137 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
                                                             <td><?= htmlspecialchars($student['class']) ?></td>
                                                         </tr>
                                                     <?php endforeach; ?>
-                                                <?php else : ?>
-                                                    <tr>
-                                                        <td class="text-center py-3" colspan="4">No active students found matching your criteria.</td>
-                                                    </tr>
-                                                <?php endif; ?>
-                                            </tbody>
-                                        </table>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- CLASS PANEL -->
+                                <div id="scope-class-panel" style="display:none;">
+                                    <div class="row mb-4">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Class <span class="asterisk">*</span></label>
+                                            <select class="form-select" id="scope_class_simple">
+                                                <option value="">Select class</option>
+                                                <?php foreach ($class_options as $c): ?>
+                                                    <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
                                     </div>
-                                <?php endif; ?>
-                                <?php if (isset($resultArr) && !empty($resultArr)) : ?>
-                                    <h4 class="mb-4">Exception Parameters</h4>
-                                    <form action="" name="exception" id="exception" method="post">
-                                        <input type="hidden" name="form-type" value="exception">
-                                        <div class="row">
-                                            <div class="col-md-4 mb-3">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input" id="multiple_days" name="multiple_days" value="1">
-                                                    <label class="form-check-label" for="multiple_days">Apply for multiple days</label>
-                                                </div>
+                                    <div class="alert alert-info py-2">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Applies to every active student who was in the selected class <strong>on the exception date</strong>.
+                                    </div>
+                                </div>
+
+                                <!-- CLASS + CATEGORY PANEL -->
+                                <div id="scope-class-category-panel" style="display:none;">
+                                    <div class="row mb-4">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Class <span class="asterisk">*</span></label>
+                                            <select class="form-select" id="scope_class_cc">
+                                                <option value="">Select class</option>
+                                                <?php foreach ($class_options as $c): ?>
+                                                    <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Category <span class="asterisk">*</span></label>
+                                            <select class="form-select" id="scope_category_cc">
+                                                <option value="">Select category</option>
+                                                <?php foreach ($category_options as $c): ?>
+                                                    <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info py-2">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Applies to students matching the class <strong>and</strong> category on the exception date.
+                                    </div>
+                                </div>
+
+                                <!-- EXCEPTION PARAMETERS -->
+                                <h5 class="mb-3 mt-4">Exception Parameters</h5>
+                                <form action="" name="exception" id="exception" method="post">
+                                    <input type="hidden" name="form-type" value="exception">
+                                    <input type="hidden" name="scope_type" id="scope_type_hidden" value="student">
+                                    <input type="hidden" name="scope_class" id="scope_class_hidden">
+                                    <input type="hidden" name="scope_category" id="scope_category_hidden">
+
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="multiple_days" name="multiple_days" value="1">
+                                                <label class="form-check-label" for="multiple_days">Apply for multiple days</label>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <div class="row single-date">
-                                            <div class="col-md-4 mb-3">
-                                                <label for="exception_date" class="form-label">Exception Date <span class="asterisk">*</span></label>
-                                                <input type="date" class="form-control" id="exception_date" name="exception_date">
-                                            </div>
+                                    <div class="row single-date">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="exception_date" class="form-label">Exception Date <span class="asterisk">*</span></label>
+                                            <input type="date" class="form-control" id="exception_date" name="exception_date">
                                         </div>
+                                    </div>
 
-                                        <div class="row date-range" style="display:none;">
-                                            <div class="col-md-4 mb-3">
-                                                <label for="start_date" class="form-label">Start Date <span class="asterisk">*</span></label>
-                                                <input type="date" class="form-control" id="start_date" name="start_date">
-                                            </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label for="end_date" class="form-label">End Date <span class="asterisk">*</span></label>
-                                                <input type="date" class="form-control" id="end_date" name="end_date">
-                                            </div>
+                                    <div class="row date-range" style="display:none;">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="start_date" class="form-label">Start Date <span class="asterisk">*</span></label>
+                                            <input type="date" class="form-control" id="start_date" name="start_date">
                                         </div>
-
-                                        <div class="row">
-                                            <div class="col-md-8 mb-3">
-                                                <label for="reason" class="form-label">Reason <span class="asterisk">*</span></label>
-                                                <textarea class="form-control" id="reason" name="reason" placeholder="Enter reason for exception" required></textarea>
-                                            </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="end_date" class="form-label">End Date <span class="asterisk">*</span></label>
+                                            <input type="date" class="form-control" id="end_date" name="end_date">
                                         </div>
+                                    </div>
 
-                                        <div class="text-end mt-3 mb-3">
-                                            <button type="submit" class="btn btn-primary">Apply Exception</button>
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label for="reason" class="form-label">Reason <span class="asterisk">*</span></label>
+                                            <textarea class="form-control" id="reason" name="reason" placeholder="Enter reason for exception" required></textarea>
                                         </div>
-                                    </form>
+                                    </div>
 
-                                    <script>
-                                        document.getElementById('multiple_days').addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.single-date').style.display = 'none';
-                                                document.querySelector('.date-range').style.display = 'flex';
-                                                document.getElementById('exception_date').required = false;
-                                                document.getElementById('start_date').required = true;
-                                                document.getElementById('end_date').required = true;
-                                            } else {
-                                                document.querySelector('.single-date').style.display = 'flex';
-                                                document.querySelector('.date-range').style.display = 'none';
-                                                document.getElementById('exception_date').required = true;
-                                                document.getElementById('start_date').required = false;
-                                                document.getElementById('end_date').required = false;
-                                            }
-                                        });
-                                    </script>
-                                <?php endif; ?>
+                                    <div class="text-end mt-3 mb-3">
+                                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                                            <i class="bi bi-check-circle me-1"></i> Apply Exception
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    </div><!-- End Reports -->
+                    </div>
                 </div>
             </div>
         </section>
-    </main><!-- End #main -->
+    </main>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-    <!-- Vendor JS Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-    <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for multiple selects
             $('select[multiple]').select2();
-
-            // Set default date to today
             $('#exception_date').val(new Date().toISOString().substr(0, 10));
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Include Student IDs
+
             $('#student_ids').select2({
                 ajax: {
                     url: 'fetch_students.php?isActive=true',
                     dataType: 'json',
                     delay: 250,
-                    data: params => ({
-                        q: params.term
+                    data: p => ({
+                        q: p.term
                     }),
-                    processResults: data => ({
-                        results: data.results
+                    processResults: d => ({
+                        results: d.results
                     }),
                     cache: true
                 },
@@ -413,17 +521,16 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
                 multiple: true
             });
 
-            // Exclude Student IDs
             $('#excluded_ids').select2({
                 ajax: {
                     url: 'fetch_students.php?isActive=true',
                     dataType: 'json',
                     delay: 250,
-                    data: params => ({
-                        q: params.term
+                    data: p => ({
+                        q: p.term
                     }),
-                    processResults: data => ({
-                        results: data.results
+                    processResults: d => ({
+                        results: d.results
                     }),
                     cache: true
                 },
@@ -433,17 +540,16 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
                 multiple: true
             });
 
-            // Categories
             $('#categories').select2({
                 ajax: {
                     url: 'fetch_category.php',
                     dataType: 'json',
                     delay: 250,
-                    data: params => ({
-                        q: params.term
+                    data: p => ({
+                        q: p.term
                     }),
-                    processResults: data => ({
-                        results: data.results
+                    processResults: d => ({
+                        results: d.results
                     }),
                     cache: true
                 },
@@ -453,17 +559,16 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
                 multiple: true
             });
 
-            // Classes
             $('#classes').select2({
                 ajax: {
                     url: 'fetch_class.php',
                     dataType: 'json',
                     delay: 250,
-                    data: params => ({
-                        q: params.term
+                    data: p => ({
+                        q: p.term
                     }),
-                    processResults: data => ({
-                        results: data.results
+                    processResults: d => ({
+                        results: d.results
                     }),
                     cache: true
                 },
@@ -474,6 +579,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
             });
         });
     </script>
+
     <script>
         $(document).ready(function() {
             const selectedClasses = <?= json_encode($_POST['class'] ?? []) ?>;
@@ -484,19 +590,20 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
             function prepopulateSelect2(selector, values, fetchUrl) {
                 values.forEach(val => {
                     $.ajax({
-                        type: 'GET',
-                        url: fetchUrl,
-                        data: {
-                            q: val
-                        },
-                        dataType: 'json'
-                    }).then(data => {
-                        const match = data.results.find(option => option.id == val);
-                        if (match) {
-                            const newOption = new Option(match.text, match.id, true, true);
-                            $(selector).append(newOption).trigger('change');
-                        }
-                    });
+                            type: 'GET',
+                            url: fetchUrl,
+                            data: {
+                                q: val
+                            },
+                            dataType: 'json'
+                        })
+                        .then(data => {
+                            const match = data.results.find(o => o.id == val);
+                            if (match) {
+                                const newOption = new Option(match.text, match.id, true, true);
+                                $(selector).append(newOption).trigger('change');
+                            }
+                        });
                 });
             }
 
@@ -507,6 +614,63 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == "exception") {
         });
     </script>
 
+    <script>
+        $(document).ready(function() {
+            $('.scope-card').on('click', function() {
+                $('.scope-card').removeClass('active');
+                $(this).addClass('active');
+                $(this).find('input[type=radio]').prop('checked', true);
+                const scope = $(this).data('scope');
+                $('#scope_type_hidden').val(scope);
+
+                $('#scope-student-panel').toggle(scope === 'student');
+                $('#scope-class-panel').toggle(scope === 'class');
+                $('#scope-class-category-panel').toggle(scope === 'class_category');
+            });
+
+            $('#multiple_days').on('change', function() {
+                if (this.checked) {
+                    $('.single-date').hide();
+                    $('.date-range').css('display', 'flex');
+                    $('#exception_date').prop('required', false);
+                    $('#start_date').prop('required', true);
+                    $('#end_date').prop('required', true);
+                } else {
+                    $('.single-date').css('display', 'flex');
+                    $('.date-range').hide();
+                    $('#exception_date').prop('required', true);
+                    $('#start_date').prop('required', false);
+                    $('#end_date').prop('required', false);
+                }
+            });
+
+            $('#exception').on('submit', function(e) {
+                const scope = $('#scope_type_hidden').val();
+                if (scope === 'class') {
+                    const cls = $('#scope_class_simple').val();
+                    if (!cls) {
+                        alert('Please select a class.');
+                        e.preventDefault();
+                        return;
+                    }
+                    $('#scope_class_hidden').val(cls);
+                } else if (scope === 'class_category') {
+                    const cls = $('#scope_class_cc').val();
+                    const cat = $('#scope_category_cc').val();
+                    if (!cls || !cat) {
+                        alert('Please select both class and category.');
+                        e.preventDefault();
+                        return;
+                    }
+                    $('#scope_class_hidden').val(cls);
+                    $('#scope_category_hidden').val(cat);
+                } else {
+                    $('#scope_class_hidden').val('');
+                    $('#scope_category_hidden').val('');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

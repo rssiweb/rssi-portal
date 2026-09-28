@@ -198,14 +198,15 @@ try {
   /* CATEGORY HISTORY */
   $historySQL = "
     INSERT INTO student_category_history (
-      student_id, category_type, effective_from, class, created_by
-    ) VALUES ($1, $2, $3, $4, $5)
+      student_id, category_type, effective_from, class, location_id, created_by
+    ) VALUES ($1, $2, $3, $4, $5, $6)
   ";
   pg_query_params($con, $historySQL, [
     $student_id,
     $type_of_admission,
     $timestamp,
     $class,
+    $preferred_branch,
     'System'
   ]);
 

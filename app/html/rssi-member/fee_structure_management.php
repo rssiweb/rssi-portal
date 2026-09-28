@@ -17,6 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['multiple_fees'])) {
             $studentType = pg_escape_string($con, $_POST['student_type']);
             $effectiveFrom = $_POST['effective_from'];
+            $locationId = isset($_POST['location_id']) && $_POST['location_id'] !== ''
+                ? (int)$_POST['location_id']
+                : 'NULL';
 
             // Get the array of selected classes
             $selectedClasses = $_POST['class']; // This should be an array from your form
@@ -29,19 +32,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $amount = $_POST['amount'][$index];
                         $categoryId = (int)$categoryId;
 
+                        // Build location condition for the UPDATE and INSERT
+                        $locationCondition = ($locationId === 'NULL')
+                            ? "location_id IS NULL"
+                            : "location_id = $locationId";
+                        $locationValue = ($locationId === 'NULL') ? 'NULL' : $locationId;
+
                         // End previous effective period for this class and category
                         $endPreviousQuery = "UPDATE fee_structure 
                                             SET effective_until = '$effectiveFrom'::date - INTERVAL '1 day'
                                             WHERE class = '$class' 
                                             AND student_type = '$studentType'
                                             AND category_id = $categoryId
+                                            AND $locationCondition
                                             AND (effective_until IS NULL OR effective_until >= '$effectiveFrom')";
                         pg_query($con, $endPreviousQuery);
 
                         // Insert new fee structure for this class
                         $query = "INSERT INTO fee_structure 
-                                 (class, student_type, category_id, amount, effective_from, created_at)
-                                 VALUES ('$class', '$studentType', $categoryId, $amount, '$effectiveFrom', NOW())";
+                                 (class, student_type, category_id, amount, effective_from, location_id, created_at)
+                                 VALUES ('$class', '$studentType', $categoryId, $amount, '$effectiveFrom', $locationValue, NOW())";
                         pg_query($con, $query);
                     }
                 }
@@ -59,6 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $categoryId = $_POST['category_id'];
             $amount = $_POST['amount'];
             $effectiveFrom = $_POST['effective_from'];
+            $locationId = isset($_POST['location_id']) && $_POST['location_id'] !== ''
+                ? (int)$_POST['location_id']
+                : null;
+
+            $locationCondition = is_null($locationId) ? "location_id IS NULL" : "location_id = $locationId";
+            $locationValue = is_null($locationId) ? 'NULL' : $locationId;
 
             // End previous effective period
             $endPreviousQuery = "UPDATE fee_structure 
@@ -66,13 +82,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 WHERE class = '$class' 
                                 AND student_type = '$studentType'
                                 AND category_id = $categoryId
+                                AND $locationCondition
                                 AND effective_until IS NULL";
             pg_query($con, $endPreviousQuery);
 
             // Insert new fee structure
             $query = "INSERT INTO fee_structure 
-                     (class, student_type, category_id, amount, effective_from)
-                     VALUES ('$class', '$studentType', $categoryId, $amount, '$effectiveFrom')";
+                     (class, student_type, category_id, amount, effective_from, location_id)
+                     VALUES ('$class', '$studentType', $categoryId, $amount, '$effectiveFrom', $locationValue)";
             pg_query($con, $query);
 
             echo "<script>
@@ -274,6 +291,9 @@ $classes = pg_fetch_all(pg_query($con, "SELECT DISTINCT class FROM rssimyprofile
 // Get all student types
 $studentTypes = pg_fetch_all(pg_query($con, "SELECT DISTINCT student_type FROM fee_structure ORDER BY student_type")) ?? [];
 
+// Get all active locations
+$locations = pg_fetch_all(pg_query($con, "SELECT id, name FROM office_locations WHERE is_active = TRUE ORDER BY name")) ?? [];
+
 // Get filter parameters as arrays, trimmed of spaces
 $filterClass = isset($_GET['filter_class']) && is_array($_GET['filter_class'])
     ? array_map('trim', $_GET['filter_class'])
@@ -289,6 +309,10 @@ $filterCategory = isset($_GET['filter_category']) && is_array($_GET['filter_cate
 
 $filterDivision = isset($_GET['filter_division']) && is_array($_GET['filter_division'])
     ? array_map('trim', $_GET['filter_division'])
+    : [];
+
+$filterLocation = isset($_GET['filter_location']) && is_array($_GET['filter_location'])
+    ? array_map('intval', $_GET['filter_location'])
     : [];
 
 $filterStatus = isset($_GET['filter_status']) ? trim($_GET['filter_status']) : '';
@@ -328,6 +352,12 @@ if (!empty($filterDivision)) {
     )";
 }
 
+// Filter by location
+if (!empty($filterLocation)) {
+    $escaped = array_map('intval', $filterLocation);
+    $whereClause .= " AND fs.location_id IN (" . implode(",", $escaped) . ")";
+}
+
 // Filter by status
 if ($filterStatus === 'active') {
     $whereClause .= " AND (fs.effective_until IS NULL OR fs.effective_until >= CURRENT_DATE)";
@@ -335,17 +365,20 @@ if ($filterStatus === 'active') {
     $whereClause .= " AND fs.effective_until < CURRENT_DATE";
 }
 
-if (empty($filterClass) && empty($filterStudentType) && empty($filterCategory) && empty($filterDivision) && empty($filterStatus)) {
-    // Default to show no fees if no filters are applied
-    $whereClause = "WHERE false"; // Ensures the query returns no rows
+if (
+    empty($filterClass) && empty($filterStudentType) && empty($filterCategory)
+    && empty($filterDivision) && empty($filterStatus) && empty($filterLocation)
+) {
+    $whereClause = "WHERE false";
 }
 
-$feeStructureQuery = "SELECT fs.*, fc.category_name, fc.fee_type
+$feeStructureQuery = "SELECT fs.*, fc.category_name, fc.fee_type, ol.name AS location_name
     FROM fee_structure fs
     JOIN fee_categories fc ON fs.category_id = fc.id
     JOIN plans p ON fs.student_type = p.name
+    LEFT JOIN office_locations ol ON fs.location_id = ol.id
     $whereClause
-    ORDER BY fs.class, fs.student_type, fc.category_name, fs.effective_from DESC";
+    ORDER BY fs.class, fs.student_type, fc.category_name, ol.name, fs.effective_from DESC";
 
 // Execute the query
 $result = pg_query($con, $feeStructureQuery);
@@ -669,6 +702,15 @@ if (!empty($statusCondition)) {
                                                                 ?>
                                                             </select>
                                                         </div>
+                                                        <div class="col-md-3">
+                                                            <label for="location_id" class="form-label">Location</label>
+                                                            <select name="location_id" id="location_id" class="form-select" required>
+                                                                <option value="">--Select Location--</option>
+                                                                <?php foreach ($locations as $loc): ?>
+                                                                    <option value="<?= (int)$loc['id'] ?>"><?= htmlspecialchars($loc['name']) ?></option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
                                                         <!-- First Effective From (change type to month) -->
                                                         <div class="col-md-3">
                                                             <label for="effective_from_month1" class="form-label">Effective From</label>
@@ -733,6 +775,17 @@ if (!empty($statusCondition)) {
                                                                         <option value="<?= htmlspecialchars($name) ?>"
                                                                             <?= in_array((string)$name, array_map('strval', $filterStudentType), true) ? 'selected' : '' ?>>
                                                                             <?= htmlspecialchars($name) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label for="filter_location" class="form-label">Location</label>
+                                                                <select name="filter_location[]" id="filter_location" class="form-select select2" multiple="multiple">
+                                                                    <?php foreach ($locations as $loc): ?>
+                                                                        <option value="<?= (int)$loc['id'] ?>"
+                                                                            <?= in_array((int)$loc['id'], array_map('intval', $filterLocation), true) ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($loc['name']) ?>
                                                                         </option>
                                                                     <?php endforeach; ?>
                                                                 </select>
@@ -814,6 +867,7 @@ if (!empty($statusCondition)) {
                                                                     </th>
                                                                     <th>Class</th>
                                                                     <th>Plan</th>
+                                                                    <th>Location</th>
                                                                     <th>Fee Type</th>
                                                                     <th>Amount</th>
                                                                     <th>Effective From</th>
@@ -825,8 +879,11 @@ if (!empty($statusCondition)) {
                                                             <tbody>
                                                                 <?php if (empty($feeStructure)): ?>
                                                                     <tr>
-                                                                        <td colspan="9" class="text-center">
-                                                                            <?php if (empty($filterClass) && empty($filterStudentType) && empty($filterCategory) && empty($filterDivision) && empty($filterStatus)): ?>
+                                                                        <td colspan="10" class="text-center">
+                                                                            <?php if (
+                                                                                empty($filterClass) && empty($filterStudentType) && empty($filterCategory)
+                                                                                && empty($filterDivision) && empty($filterStatus) && empty($filterLocation)
+                                                                            ): ?>
                                                                                 Please select at least one filter to view the fee structure.
                                                                             <?php else: ?>
                                                                                 No fee structure found matching your criteria.
@@ -846,6 +903,7 @@ if (!empty($statusCondition)) {
                                                                             </td>
                                                                             <td><?= $fee['class'] ?></td>
                                                                             <td><?= $fee['student_type'] ?></td>
+                                                                            <td><?= htmlspecialchars($fee['location_name'] ?? 'All') ?></td>
                                                                             <td><?= $fee['category_name'] ?></td>
                                                                             <td>₹<?= number_format($fee['amount'], 2) ?></td>
                                                                             <td><?= date('d-M-Y', strtotime($fee['effective_from'])) ?></td>
@@ -1260,6 +1318,12 @@ if (!empty($statusCondition)) {
 
     <script>
         $(document).ready(function() {
+            // $('#location_id, #filter_location').select2({
+            //     width: '100%',
+            //     placeholder: 'Select Location',
+            //     allowClear: true,
+            //     theme: 'bootstrap-5'
+            // });
             // Initialize Select2
             function initializeSelect2() {
                 $('#spf_id').select2({

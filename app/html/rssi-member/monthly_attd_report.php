@@ -80,15 +80,9 @@ holidays AS (
     WHERE h.holiday_date BETWEEN '$startDate'::date AND '$endDate'::date
 ),
 student_exceptions AS (
-    SELECT 
-        m.student_id,
-        e.exception_date AS attendance_date
-    FROM 
-        student_class_days_exceptions e
-    JOIN 
-        student_exception_mapping m ON e.exception_id = m.exception_id
-    WHERE 
-        e.exception_date BETWEEN '$startDate'::date AND '$endDate'::date
+    SELECT DISTINCT student_id, exception_date AS attendance_date
+    FROM v_exception_students
+    WHERE exception_date BETWEEN '$startDate'::date AND '$endDate'::date
 ),
 attendance_data AS (
     SELECT
