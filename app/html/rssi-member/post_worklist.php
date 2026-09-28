@@ -26,13 +26,17 @@ if (!empty($_GET['start_date']) && !empty($_GET['end_date']) && $_GET['start_dat
 $query = "
     SELECT 
         events.*, 
-        creator.fullname AS created_by_name, 
-        reviewer.fullname AS reviewed_by_name
+        creator.fullname  AS created_by_name, 
+        reviewer.fullname AS reviewed_by_name,
+        ol.name           AS event_location_name,
+        ol.id             AS event_location_id
     FROM events
     LEFT JOIN rssimyaccount_members AS creator 
         ON events.created_by = creator.associatenumber
     LEFT JOIN rssimyaccount_members AS reviewer 
         ON events.reviewed_by = reviewer.associatenumber
+    LEFT JOIN office_locations AS ol
+        ON ol.id = events.event_location
     WHERE (
         ($1::timestamp IS NOT NULL AND $2::timestamp IS NOT NULL AND events.created_at BETWEEN $1::timestamp AND ($2::timestamp + interval '1 day' - interval '1 microsecond'))
         OR
@@ -60,7 +64,7 @@ if (!$result) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'includes/meta.php' ?>
-    
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -142,7 +146,9 @@ if (!$result) {
                                                 </td>
                                                 <td><?= htmlspecialchars($row['created_by_name']) ?><br>
                                                     <?= htmlspecialchars((new DateTime($row['created_at']))->format('d/m/Y h:i A')); ?></td>
-                                                <td><?= htmlspecialchars($row['event_location']) ?></td>
+                                                <td>
+                                                    <?= htmlspecialchars($row['event_location_name'] ?? $row['event_location'] ?? '—') ?>
+                                                </td>
                                                 <td>
                                                     <?= $row['event_image_url'] ? '<a href="' . htmlspecialchars($row['event_image_url']) . '" target="_blank">Link</a>' : null ?>
                                                 </td>
