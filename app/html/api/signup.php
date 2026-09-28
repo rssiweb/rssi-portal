@@ -74,7 +74,9 @@ $date_of_birth  = $_POST['date-of-birth'] ?? null;
 $gender         = $_POST['gender'] ?? null;
 $telephone      = $_POST['telephone'] ?? null;
 $email          = $_POST['email'] ?? null;
-$branch         = $_POST['branch'] ?? null;
+$branch = isset($_POST['branch']) && $_POST['branch'] !== ''
+    ? (int) $_POST['branch']
+    : null;
 $association    = $_POST['association'] ?? null;
 $job_select     = $_POST['job-select'] ?? null;
 $purpose        = trim($_POST['purpose'] ?? null);

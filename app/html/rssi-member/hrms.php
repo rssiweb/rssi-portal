@@ -15,6 +15,26 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
+
+// ===== Location ID → name lookup (basebranch, depb, etc.) =====
+$locationMap = [];
+$locRes = pg_query($con, "SELECT id, name FROM office_locations");
+if ($locRes) {
+    while ($r = pg_fetch_assoc($locRes)) {
+        $locationMap[(string)$r['id']] = $r['name'];
+    }
+    pg_free_result($locRes);
+}
+
+/**
+ * Resolve a location value (ID or legacy name) to a display name.
+ */
+function locationName($locationMap, $value)
+{
+    if ($value === null || $value === '') return '';
+    $key = (string)$value;
+    return $locationMap[$key] ?? $value; // fall back to raw value if not found
+}
 ?>
 <?php
 $search_id = ($role === 'Admin')
@@ -986,7 +1006,7 @@ echo "<script>
                                         </div>
                                         <div class="contact-info">
                                             <p><?php echo $array["phone"] ?></p>
-                                            <p><?php echo $array["basebranch"] ?></p>
+                                            <p><?php echo htmlspecialchars(locationName($locationMap, $array["basebranch"])); ?></p>
                                             <p><?php echo $array["email"] ?></p>
                                         </div>
                                     </div>
@@ -1452,16 +1472,14 @@ echo "<script>
                                                                             <tr>
                                                                                 <td><label for="basebranch">Base Branch:</label></td>
                                                                                 <td>
-                                                                                    <span id="baseBranchText"><?php echo $array['basebranch']; ?></span>
+                                                                                    <span id="baseBranchText"><?php echo htmlspecialchars(locationName($locationMap, $array['basebranch'])); ?></span>
                                                                                     <select name="basebranch" id="basebranch" disabled class="form-select" style="display:none;">
                                                                                         <option disabled selected>Select Base Branch</option>
                                                                                         <?php
-                                                                                        // List of Base Branches
-                                                                                        $base_branches = ["Lucknow", "West Bengal"];
-                                                                                        // Generate <option> elements dynamically for Base Branch
-                                                                                        foreach ($base_branches as $branch) {
-                                                                                            $selected = ($array["basebranch"] == $branch) ? "selected" : "";
-                                                                                            echo "<option value=\"$branch\" $selected>$branch</option>";
+                                                                                        foreach ($locationMap as $locId => $locName) {
+                                                                                            $selected = ((string)$array['basebranch'] === (string)$locId) ? "selected" : "";
+                                                                                            echo '<option value="' . htmlspecialchars($locId) . '" ' . $selected . '>'
+                                                                                                . htmlspecialchars($locName) . '</option>';
                                                                                         }
                                                                                         ?>
                                                                                     </select>
@@ -1471,16 +1489,14 @@ echo "<script>
                                                                             <tr>
                                                                                 <td><label for="depb">Deputed Branch:</label></td>
                                                                                 <td>
-                                                                                    <span id="deputedBranchText"><?php echo $array['depb']; ?></span>
+                                                                                    <span id="deputedBranchText"><?php echo htmlspecialchars(locationName($locationMap, $array['depb'])); ?></span>
                                                                                     <select name="depb" id="depb" disabled class="form-select" style="display:none;">
                                                                                         <option disabled selected>Select Deputed Branch</option>
                                                                                         <?php
-                                                                                        // List of Deputed Branches
-                                                                                        $deputed_branches = ["Lucknow", "West Bengal"];
-                                                                                        // Generate <option> elements dynamically for Deputed Branch
-                                                                                        foreach ($deputed_branches as $branch) {
-                                                                                            $selected = ($array["depb"] == $branch) ? "selected" : "";
-                                                                                            echo "<option value=\"$branch\" $selected>$branch</option>";
+                                                                                        foreach ($locationMap as $locId => $locName) {
+                                                                                            $selected = ((string)$array['depb'] === (string)$locId) ? "selected" : "";
+                                                                                            echo '<option value="' . htmlspecialchars($locId) . '" ' . $selected . '>'
+                                                                                                . htmlspecialchars($locName) . '</option>';
                                                                                         }
                                                                                         ?>
                                                                                     </select>
