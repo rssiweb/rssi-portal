@@ -16,12 +16,15 @@ $academic_year = $_GET['academic_year'] ?? '';
 $class_filter = $_GET['get_class'] ?? []; // Fetch selected classes (if any)
 $location_filter = $_GET['get_location'] ?? []; // Fetch selected locations (if any)
 
-// Get locations from office_locations table for dropdown
-$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+// Get locations from office_locations table for dropdown (id + name)
+$locations_query = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
 $locations_result = pg_query($con, $locations_query);
 $locations = [];
 while ($row = pg_fetch_assoc($locations_result)) {
-    $locations[] = $row['name'];
+    $locations[] = [
+        'id'   => $row['id'],
+        'name' => $row['name']
+    ];
 }
 
 // SQL query to fetch exam results for all students in the given academic year
@@ -250,16 +253,16 @@ $classlist = [
                                                 } ?>
                                             </select>
                                         </div>
-                                        <!-- Location -->
+                                        <!-- Location (value = ID, label = name) -->
                                         <div class="col-md-auto">
                                             <label for="get_location" class="form-label me-2">Location:</label>
                                             <select name="get_location[]" id="get_location" class="form-select" multiple>
-                                                <?php foreach ($locations as $loc) { ?>
-                                                    <option value="<?= htmlspecialchars($loc) ?>"
-                                                        <?php if (in_array($loc, $location_filter)) echo "selected"; ?>>
-                                                        <?= htmlspecialchars($loc) ?>
+                                                <?php foreach ($locations as $loc): ?>
+                                                    <option value="<?= (int)$loc['id'] ?>"
+                                                        <?php if (in_array((string)$loc['id'], array_map('strval', (array)$location_filter), true)) echo "selected"; ?>>
+                                                        <?= htmlspecialchars($loc['name']) ?>
                                                     </option>
-                                                <?php } ?>
+                                                <?php endforeach; ?>
                                             </select>
                                         </div>
 

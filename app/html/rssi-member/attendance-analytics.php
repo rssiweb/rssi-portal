@@ -33,23 +33,50 @@ $filter_where = '';
 // Case 1: Both location and user type are selected
 if (!empty($selected_location) && !empty($selected_user_type)) {
     if ($selected_user_type === 'student') {
-        // Student: user_id = student_id, location = preferredbranch
+        // Student: user_id = student_id, location = preferredbranch (stores ID)
         $filter_join = "INNER JOIN rssimyprofile_student s ON a.user_id = s.student_id";
         $filter_where = "AND s.preferredbranch = '" . pg_escape_string($con, $selected_location) . "'";
     } elseif ($selected_user_type === 'associate') {
         // Associate: user_id = associatenumber, location = basebranch
+        // NOTE: basebranch still stores the NAME — resolve from location id
+        $locNameRow = pg_fetch_assoc(pg_query_params(
+            $con,
+            "SELECT name FROM office_locations WHERE id = $1 LIMIT 1",
+            [$selected_location]
+        ));
+        $locName = $locNameRow['name'] ?? '';
         $filter_join = "INNER JOIN rssimyaccount_members m ON a.user_id = m.associatenumber";
-        $filter_where = "AND m.basebranch = '" . pg_escape_string($con, $selected_location) . "'";
+        $filter_where = $locName !== ''
+            ? "AND m.basebranch = '" . pg_escape_string($con, $locName) . "'"
+            : "AND FALSE";
     }
 }
 // Case 2: Only location is selected - check both tables using LEFT JOIN
 elseif (!empty($selected_location) && empty($selected_user_type)) {
+    // Resolve location name (for members.basebranch which still stores name)
+    $locNameRow = null;
+    $locName = '';
+    $locRes = pg_query_params(
+        $con,
+        "SELECT name FROM office_locations WHERE id = $1 LIMIT 1",
+        [$selected_location]
+    );
+    if ($locRes) {
+        $locNameRow = pg_fetch_assoc($locRes);
+        $locName = $locNameRow['name'] ?? '';
+    }
+
     $filter_join = "
         LEFT JOIN rssimyprofile_student s ON a.user_id = s.student_id
         LEFT JOIN rssimyaccount_members m ON a.user_id = m.associatenumber
     ";
-    $filter_where = "AND (s.preferredbranch = '" . pg_escape_string($con, $selected_location) . "' 
-                     OR m.basebranch = '" . pg_escape_string($con, $selected_location) . "')";
+
+    $studentClause = "s.preferredbranch = '" . pg_escape_string($con, $selected_location) . "'";
+    $memberClause  = $locName !== ''
+        ? "m.basebranch = '" . pg_escape_string($con, $locName) . "'"
+        : 'FALSE';
+
+    $filter_where = "AND ($studentClause OR $memberClause)";
 }
 // Case 3: Only user type is selected
 elseif (empty($selected_location) && !empty($selected_user_type)) {
@@ -61,12 +88,15 @@ elseif (empty($selected_location) && !empty($selected_user_type)) {
 }
 // Case 4: No filters - $filter_join and $filter_where remain empty
 
-// Get locations from office_locations table for dropdown
-$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+// Get locations from office_locations table for dropdown (id + name)
+$locations_query = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
 $locations_result = pg_query($con, $locations_query);
 $locations = [];
 while ($row = pg_fetch_assoc($locations_result)) {
-    $locations[] = $row['name'];
+    $locations[] = [
+        'id'   => $row['id'],
+        'name' => $row['name']
+    ];
 }
 
 /*********************** DAILY DATA ***********************/
@@ -463,14 +493,15 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                             </div>
                                         <?php endif; ?>
 
-                                        <!-- Location Filter -->
+                                        <!-- Location Filter (value = ID, label = name) -->
                                         <div class="col-md-3">
                                             <label for="location" class="form-label">Location</label>
                                             <select class="form-select" id="location" name="location">
                                                 <option value="">All Locations</option>
                                                 <?php foreach ($locations as $location): ?>
-                                                    <option value="<?= htmlspecialchars($location) ?>" <?= $location == $selected_location ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($location) ?>
+                                                    <option value="<?= (int)$location['id'] ?>"
+                                                        <?= ((int)$location['id'] === (int)$selected_location) ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($location['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -588,8 +619,20 @@ $max_year = pg_fetch_result($max_year_result, 0, 0);
                                         <div class="card mt-4">
                                             <div class="card-header">
                                                 <h5>Daily Footfall Trend - <?= DateTime::createFromFormat('!m', $selected_month)->format('F') ?> <?= $selected_year ?>
+                                                    <?php
+                                                    // Resolve location id → name for display
+                                                    $selectedLocationName = '';
+                                                    if ($selected_location !== '') {
+                                                        foreach ($locations as $loc) {
+                                                            if ((int)$loc['id'] === (int)$selected_location) {
+                                                                $selectedLocationName = $loc['name'];
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
                                                     <?php if ($selected_location): ?>
-                                                        <span class="badge bg-primary ms-2">Location: <?= htmlspecialchars($selected_location) ?></span>
+                                                        <span class="badge bg-primary ms-2">Location: <?= htmlspecialchars($selectedLocationName ?: $selected_location) ?></span>
                                                     <?php endif; ?>
                                                     <?php if ($selected_user_type): ?>
                                                         <span class="badge bg-success ms-2">Type: <?= htmlspecialchars($selected_user_type) ?></span>

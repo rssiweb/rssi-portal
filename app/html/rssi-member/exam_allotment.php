@@ -129,13 +129,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         pg_free_result($result);
     }
 
-    // Fetch locations for dropdown
+    // Fetch locations for dropdown (id + name)
     $locations = [];
-    $locationQuery = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+    $locationQuery = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
     $locationResult = pg_query($con, $locationQuery);
     if ($locationResult) {
         while ($row = pg_fetch_assoc($locationResult)) {
-            $locations[] = $row['name'];
+            $locations[] = [
+                'id'   => $row['id'],
+                'name' => $row['name']
+            ];
         }
         pg_free_result($locationResult);
     }
@@ -277,14 +280,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                             </select>
                                         </div>
 
-                                        <!-- New Location Filter -->
+                                        <!-- New Location Filter (value = ID, label = name) -->
                                         <div class="col-md-3">
                                             <label for="location" class="form-label">Location</label>
                                             <select class="form-select" id="location" name="location">
                                                 <option value="" <?php echo !isset($_GET['location']) ? 'selected' : ''; ?>>All Locations</option>
                                                 <?php foreach ($locations as $location): ?>
-                                                    <option value="<?php echo htmlspecialchars($location); ?>" <?php echo (isset($_GET['location']) && $_GET['location'] == $location) ? 'selected' : ''; ?>>
-                                                        <?php echo htmlspecialchars($location); ?>
+                                                    <option value="<?= (int)$location['id'] ?>"
+                                                        <?php echo (isset($_GET['location']) && (int)$_GET['location'] === (int)$location['id']) ? 'selected' : ''; ?>>
+                                                        <?= htmlspecialchars($location['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>

@@ -11,12 +11,15 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Get locations from office_locations table for dropdown
-$locations_query = "SELECT name FROM office_locations WHERE is_active = true ORDER BY name";
+// Get locations from office_locations table for dropdown (id + name)
+$locations_query = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
 $locations_result = pg_query($con, $locations_query);
 $locations = [];
 while ($row = pg_fetch_assoc($locations_result)) {
-    $locations[] = $row['name'];
+    $locations[] = [
+        'id'   => $row['id'],
+        'name' => $row['name']
+    ];
 }
 
 if (@$_POST['form-type'] == "exam_filter") {
@@ -25,6 +28,25 @@ if (@$_POST['form-type'] == "exam_filter") {
     $student_ids = $_POST['student_ids'] ?? [];
     $excluded_ids = $_POST['excluded_ids'] ?? [];
     $location = $_POST['location'] ?? [];
+
+    // Normalize any legacy location NAME → ID
+    if (!empty($location)) {
+        foreach ($location as $i => $val) {
+            if (!is_numeric($val)) {
+                $res = pg_query_params(
+                    $con,
+                    "SELECT id FROM office_locations WHERE name = $1 LIMIT 1",
+                    [$val]
+                );
+                if ($res) {
+                    $row = pg_fetch_assoc($res);
+                    if ($row) {
+                        $location[$i] = $row['id'];
+                    }
+                }
+            }
+        }
+    }
 
     $query = "SELECT student_id, studentname, category, class FROM rssimyprofile_student WHERE filterstatus='Active'";
     $conditions = [];
@@ -50,6 +72,7 @@ if (@$_POST['form-type'] == "exam_filter") {
     }
 
     if (!empty($location)) {
+        // $location now contains location IDs (from the dropdown)
         $location_list = implode("','", array_map(fn($l) => pg_escape_string($con, $l), $location));
         $conditions[] = "preferredbranch IN ('$location_list')";
     }
@@ -290,10 +313,13 @@ if (@$_POST['form-type'] == "exam") {
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                                         <label for="locations" class="form-label small mb-1">Location</label>
                                         <select class="form-select" id="locations" name="location[]" multiple>
-                                            <?php foreach ($locations as $loc): ?>
-                                                <option value="<?= htmlspecialchars($loc) ?>"
-                                                    <?= in_array($loc, (array)($_POST['location'] ?? [])) ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($loc) ?>
+                                            <?php
+                                            $selectedLocations = (array)($_POST['location'] ?? []);
+                                            foreach ($locations as $loc):
+                                                $isSelected = in_array((string)$loc['id'], array_map('strval', $selectedLocations), true);
+                                            ?>
+                                                <option value="<?= (int)$loc['id'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($loc['name']) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
