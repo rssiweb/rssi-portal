@@ -2,6 +2,14 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 
+if (!isLoggedIn("aid")) {
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  header("Location: index.php");
+  exit;
+}
+
+validation();
+
 // Set headers first
 header('Content-Type: application/json');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
