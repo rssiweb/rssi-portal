@@ -1844,29 +1844,18 @@ if (!function_exists('makeClickableLinks')) {
 
       // Initialize calendar
       function initializeCalendar() {
+        // Render — this fires datesSet exactly once, which triggers loadCalendarDates
         calendar.render();
-        calendar.gotoDate(new Date());
 
-        showMonthLoading();
+        // No gotoDate — render() already positions to today
+        // No manual loadCalendarDates() — the datesSet handler does it
 
-        const currentDate = new Date();
-        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-        loadCalendarDates(firstDay, lastDay).then(() => {
-          hideMonthLoading();
-          setTimeout(showCalendar, 100);
-        }).catch(error => {
-          console.error('Failed to load calendar dates:', error);
-          hideMonthLoading();
-          setTimeout(showCalendar, 100);
-        });
-
+        // Reveal the calendar once datesSet has run at least once
         setTimeout(() => {
+          showCalendar();
           calendar.updateSize();
-          // Add month/year selector after calendar is rendered
           addMonthYearSelector();
-        }, 200);
+        }, 400);
       }
 
       // Replace the addMonthYearSelector function with this:
