@@ -32,86 +32,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $event_type = pg_escape_string($con, $_POST['event_type']);
     $is_full_day = isset($_POST['is_full_day']) ? 'true' : 'false';
 
-    // Handle time fields - convert 12-hour to 24-hour format
+    // --- Time handling (unchanged) ---
     $event_start_time = null;
     $event_end_time = null;
     $reporting_time = null;
 
-    // Handle class selection (multiple classes)
+    if (!empty($_POST['event_start_time'])) {
+        $event_start_time = pg_escape_string($con, date("H:i:00", strtotime(trim($_POST['event_start_time']))));
+    }
+    if (!empty($_POST['event_end_time'])) {
+        $event_end_time = pg_escape_string($con, date("H:i:00", strtotime(trim($_POST['event_end_time']))));
+    }
+    if (!empty($_POST['reporting_time'])) {
+        $reporting_time = pg_escape_string($con, date("H:i:00", strtotime(trim($_POST['reporting_time']))));
+    }
+
+    // --- Applicable classes (unchanged) ---
     $applicable_classes = null;
     if (isset($_POST['applicable_classes']) && !empty($_POST['applicable_classes'])) {
-        $classes_array = $_POST['applicable_classes'];
-        // Sanitize each class value
         $sanitized_classes = array_map(function ($class) use ($con) {
             return pg_escape_string($con, trim($class));
-        }, $classes_array);
-        $applicable_classes = '{' . implode(',', $sanitized_classes) . '}'; // PostgreSQL array format
+        }, $_POST['applicable_classes']);
+        $applicable_classes = '{' . implode(',', $sanitized_classes) . '}';
     }
 
-    // ALWAYS check for time fields, regardless of is_full_day
-    if (!empty($_POST['event_start_time'])) {
-        $time_str = trim($_POST['event_start_time']);
-        // Convert 12-hour format (e.g., "11:00 AM") to 24-hour format
-        $event_start_time = date("H:i:00", strtotime($time_str));
-        $event_start_time = pg_escape_string($con, $event_start_time);
+    // --- NEW: Location (array of IDs) ---
+    $location_ids = [];
+    if (isset($_POST['location']) && is_array($_POST['location'])) {
+        foreach ($_POST['location'] as $loc_id) {
+            $loc_id_int = intval($loc_id);
+            if ($loc_id_int > 0) {
+                $location_ids[] = $loc_id_int;
+            }
+        }
     }
 
-    if (!empty($_POST['event_end_time'])) {
-        $time_str = trim($_POST['event_end_time']);
-        $event_end_time = date("H:i:00", strtotime($time_str));
-        $event_end_time = pg_escape_string($con, $event_end_time);
-    }
-
-    if (!empty($_POST['reporting_time'])) {
-        $time_str = trim($_POST['reporting_time']);
-        $reporting_time = date("H:i:00", strtotime($time_str));
-        $reporting_time = pg_escape_string($con, $reporting_time);
-    }
-
-    $location = pg_escape_string($con, $_POST['location']);
     $description = pg_escape_string($con, $_POST['description']);
     $created_by = $associatenumber;
 
-    // Check if event already exists on this date
-    $check_sql = "SELECT COUNT(*) as count FROM internal_events WHERE event_date = $1 AND event_name = $2";
-    $check_result = pg_query_params($con, $check_sql, [$event_date, $event_name]);
-    $check_data = pg_fetch_assoc($check_result);
-
-    if ($check_data['count'] > 0) {
-        $message = 'An event with the same name already exists on this date!';
+    // --- Validation ---
+    if (empty($location_ids)) {
+        $message = 'Please select at least one location.';
         $message_type = 'danger';
     } else {
-        // Insert the event
+        // Check duplicates: event name + date + location (per location)
+        $existing_locations = [];
+        $check_sql = "SELECT location FROM internal_events WHERE event_date = $1 AND event_name = $2";
+        $check_result = pg_query_params($con, $check_sql, [$event_date, $event_name]);
+        if ($check_result) {
+            while ($row = pg_fetch_assoc($check_result)) {
+                $existing_locations[] = intval($row['location']);
+            }
+        }
+
+        // Split locations into "to insert" and "already exists"
+        $to_insert = [];
+        $skipped = [];
+        foreach ($location_ids as $loc_id) {
+            if (in_array($loc_id, $existing_locations)) {
+                $skipped[] = $loc_id;
+            } else {
+                $to_insert[] = $loc_id;
+            }
+        }
+
+        // Insert one event per location
         $insert_sql = "INSERT INTO internal_events (
             event_name, event_date, event_type, is_full_day, 
             event_start_time, event_end_time, reporting_time, 
             location, description, created_by, updated_by, applicable_classes
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)";
 
-        $params = [
-            $event_name,
-            $event_date,
-            $event_type,
-            $is_full_day,
-            $event_start_time,
-            $event_end_time,
-            $reporting_time,
-            $location,
-            $description,
-            $created_by,
-            $created_by,
-            $applicable_classes
-        ];
+        $inserted_count = 0;
+        $errors = [];
 
-        $result = pg_query_params($con, $insert_sql, $params);
+        foreach ($to_insert as $loc_id) {
+            $params = [
+                $event_name,
+                $event_date,
+                $event_type,
+                $is_full_day,
+                $event_start_time,
+                $event_end_time,
+                $reporting_time,
+                $loc_id,                // integer location_id
+                $description,
+                $created_by,
+                $created_by,
+                $applicable_classes
+            ];
+            $result = pg_query_params($con, $insert_sql, $params);
+            if ($result) {
+                $inserted_count++;
+            } else {
+                $errors[] = pg_last_error($con);
+            }
+        }
 
-        if ($result) {
-            $message = 'Event created successfully!';
+        // Build user-facing message
+        if ($inserted_count > 0 && empty($errors)) {
+            $message = $inserted_count === 1
+                ? 'Event created successfully!'
+                : "{$inserted_count} events created successfully (one per location)!";
+            if (!empty($skipped)) {
+                $message .= ' ' . count($skipped) . ' location(s) skipped (event already exists there on this date).';
+            }
             $message_type = 'success';
-            $_POST = []; // Clear form
+            $_POST = [];
+        } elseif ($inserted_count > 0 && !empty($errors)) {
+            $message = "{$inserted_count} event(s) created, but some failed: " . implode('; ', $errors);
+            $message_type = 'warning';
         } else {
-            $message = 'Error creating event: ' . pg_last_error($con);
-            $message_type = 'danger';
+            if (!empty($skipped)) {
+                $message = 'No new events created — event already exists at the selected location(s) on this date.';
+                $message_type = 'danger';
+            } else {
+                $message = 'Error creating event: ' . implode('; ', $errors);
+                $message_type = 'danger';
+            }
         }
     }
 }
@@ -204,12 +242,15 @@ $recent_events_sql = "
     SELECT 
         e.*, 
         u.fullname,
-        et.display_name AS event_type_name
+        et.display_name AS event_type_name,
+        ol.name AS location_name
     FROM internal_events e
     LEFT JOIN rssimyaccount_members u 
         ON e.created_by = u.associatenumber
     LEFT JOIN event_types et
         ON e.event_type = et.id
+    LEFT JOIN office_locations ol
+        ON e.location = ol.id
     $query_where_clause
     ORDER BY e.event_date DESC, e.created_at DESC
 ";
@@ -412,12 +453,12 @@ if (!$recent_events_result) {
                                         <div class="invalid-feedback">Please select event type.</div>
                                     </div>
 
-                                    <!-- Location -->
+                                    <!-- Location (multi-select, one event per location) -->
                                     <div class="col-md-6">
-                                        <label for="location" class="form-label">Location</label>
-                                        <input type="text" class="form-control" id="location" name="location"
-                                            value=""
-                                            maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground" required>
+                                        <label for="location" class="form-label required-field">Location</label>
+                                        <select class="form-select" id="location" name="location[]" multiple="multiple" required></select>
+                                        <small class="form-text text-muted">Select one or more locations. One event will be created per location.</small>
+                                        <div class="invalid-feedback">Please select at least one location.</div>
                                     </div>
                                     <!-- Applicable Classes -->
                                     <div class="col-md-6">
@@ -689,7 +730,7 @@ if (!$recent_events_result) {
                                                         <?= htmlspecialchars($event['event_type_name'] ?? 'Other'); ?>
                                                     </td>
                                                     <td>
-                                                        <?= htmlspecialchars($event['location'] ?: 'N/A'); ?>
+                                                        <?= htmlspecialchars($event['location_name'] ?? $event['location'] ?? 'N/A'); ?>
                                                     </td>
                                                     <td>
                                                         <?= htmlspecialchars($event['fullname'] ?: 'User ' . $event['created_by']); ?>
@@ -871,6 +912,32 @@ if (!$recent_events_result) {
                 minimumInputLength: 1, // Minimum characters to start searching
                 templateResult: formatClassResult, // Optional: custom formatting
                 templateSelection: formatClassSelection // Optional: custom formatting
+            });
+
+            // Initialize Select2 with AJAX for locations (multi-select)
+            $('#location').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search and select locations...',
+                allowClear: true,
+                closeOnSelect: true,
+                width: '100%',
+                ajax: {
+                    url: 'fetch_locations.php?format=select2',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function(params) {
+                        return {
+                            q: params.term || ''
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1, // Minimum characters to start searching
             });
 
             // Optional: Custom formatting functions

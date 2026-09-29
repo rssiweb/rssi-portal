@@ -150,11 +150,13 @@ try {
         "SELECT e.*, 
                 u.fullname AS created_by_name, 
                 u2.fullname AS updated_by_name,
-                et.display_name AS event_type_name
+                et.display_name AS event_type_name,
+                ol.name AS location_name
          FROM internal_events e 
          LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
          LEFT JOIN rssimyaccount_members u2 ON e.updated_by = u2.associatenumber 
          LEFT JOIN event_types et ON e.event_type = et.id
+         LEFT JOIN office_locations ol ON e.location = ol.id
          WHERE e.event_date = $1 
          ORDER BY e.created_at",
         [$date]
@@ -168,7 +170,7 @@ try {
                 'date' => $row['event_date'],
                 'type' => $row['event_type_name'] ?? 'Other',
                 'is_full_day' => $row['is_full_day'] == 't',
-                'location' => $row['location'],
+                'location' => $row['location_name'] ?? $row['location'] ?? 'Not specified',
                 'description' => $row['description'],
                 'created_by' => $row['created_by'],
                 'created_by_name' => $row['created_by_name'],

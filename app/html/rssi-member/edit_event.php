@@ -23,10 +23,11 @@ $event_id = $_GET['id'] ?? 0;
 // Fetch event details
 $event = null;
 if ($event_id) {
-    $sql = "SELECT e.*, u.fullname as creator_name 
-            FROM internal_events e 
-            LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
-            WHERE e.id = $1";
+    $sql = "SELECT e.*, u.fullname as creator_name, ol.name AS location_name
+        FROM internal_events e 
+        LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
+        LEFT JOIN office_locations ol ON e.location = ol.id
+        WHERE e.id = $1";
     $result = pg_query_params($con, $sql, [$event_id]);
     $event = pg_fetch_assoc($result);
 }
@@ -111,7 +112,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reporting_time = pg_escape_string($con, $reporting_time);
     }
 
-    $location = pg_escape_string($con, $_POST['location']);
+    $location = intval($_POST['location']); // integer location_id
+    if ($location <= 0) {
+        $message = 'Please select a valid location.';
+        $message_type = 'danger';
+        // (fall through; the update block below will still run — consider adding a guard)
+    }
     $description = pg_escape_string($con, $_POST['description']);
     $updated_by = $associatenumber;
 
@@ -397,12 +403,20 @@ if (!empty($event['applicable_classes'])) {
                                         <div class="invalid-feedback">Please select event type.</div>
                                     </div>
 
-                                    <!-- Location -->
+                                    <!-- Location (single-select for edit) -->
                                     <div class="col-md-6">
-                                        <label for="location" class="form-label">Location</label>
-                                        <input type="text" class="form-control" id="location" name="location"
-                                            value="<?php echo htmlspecialchars($_POST['location'] ?? $event['location'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            maxlength="255" placeholder="e.g., Main Auditorium, Sports Ground">
+                                        <label for="location" class="form-label required-field">Location</label>
+                                        <select class="form-select" id="location" name="location" required>
+                                            <?php
+                                            $current_location_id = $_POST['location'] ?? $event['location'] ?? '';
+                                            if (!empty($current_location_id)):
+                                            ?>
+                                                <option value="<?php echo htmlspecialchars($current_location_id); ?>" selected>
+                                                    <?php echo htmlspecialchars($event['location_name'] ?? ('Location #' . $current_location_id)); ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        </select>
+                                        <div class="invalid-feedback">Please select a location.</div>
                                     </div>
                                     <!-- Applicable Classes -->
                                     <div class="col-md-12">
@@ -637,6 +651,31 @@ if (!empty($event['applicable_classes'])) {
                 width: '100%',
                 ajax: {
                     url: 'fetch_class.php',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function(params) {
+                        return {
+                            q: params.term || ''
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+
+            // Initialize Select2 with AJAX for location (single-select)
+            $('#location').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search for a location...',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: 'fetch_locations.php?format=select2',
                     dataType: 'json',
                     delay: 300,
                     data: function(params) {
