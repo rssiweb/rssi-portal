@@ -86,18 +86,20 @@ if ($showData) {
 
 -- 1. Holidays and workday exceptions as simple sets
 holiday_set AS (
-    SELECT holiday_date FROM holidays WHERE is_flexi = false
+    SELECT holiday_date, location
+    FROM holidays
+    WHERE is_flexi = false
 ),
 workday_exc AS (
-    SELECT exception_date FROM workday_exceptions WHERE is_workday = TRUE
+    SELECT exception_date, location_id
+    FROM workday_exceptions
+    WHERE is_workday = TRUE
 ),
 
 -- Calendar: days minus holidays, plus workday exceptions
 calendar AS (
     SELECT d.attendance_date
     FROM date_range d
-    WHERE NOT EXISTS (SELECT 1 FROM holiday_set h WHERE h.holiday_date = d.attendance_date)
-       OR EXISTS (SELECT 1 FROM workday_exc w WHERE w.exception_date = d.attendance_date)
 ),
 
 -- Total Sundays
@@ -117,9 +119,11 @@ members AS (
         m.phone,
         m.doj,
         m.effectivedate,
+        m.depb,
         COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode
     FROM rssimyaccount_members m
-    WHERE m.grade <> 'D'
+    -- WHERE m.grade <> 'D'
+    WHERE 1=1
       AND DATE_TRUNC('month', TO_DATE('$startMonth','YYYY-MM'))::date
           <= COALESCE(DATE_TRUNC('month', m.effectivedate)::date, NOW())
       AND DATE_TRUNC('month', TO_DATE('$endMonth','YYYY-MM'))::date
@@ -174,6 +178,27 @@ member_workdays AS (
      AND sc.dow = EXTRACT(DOW FROM c.attendance_date)::int
      AND sc.start_date <= c.attendance_date
      AND (sc.end_date IS NULL OR sc.end_date >= c.attendance_date)
+    WHERE
+        -- Not a holiday for this member's location
+        NOT EXISTS (
+            SELECT 1
+            FROM holiday_set h
+            WHERE h.holiday_date = c.attendance_date
+              AND (
+                  h.location IS NULL
+                  OR h.location = m.depb
+              )
+        )
+        -- OR the date is force-enabled by a workday exception for this member's location
+        OR EXISTS (
+            SELECT 1
+            FROM workday_exc w
+            WHERE w.exception_date = c.attendance_date
+              AND (
+                  w.location_id IS NULL
+                  OR w.location_id = m.depb
+              )
+        )
     GROUP BY m.associatenumber
 ),
 
@@ -186,6 +211,10 @@ holiday_dates AS (
     JOIN members m
       ON h.holiday_date BETWEEN GREATEST(m.doj, '$startDate'::date)
                             AND LEAST(COALESCE(m.effectivedate, '$endDate'::date), '$endDate'::date)
+     AND (
+         h.location IS NULL
+         OR h.location = m.depb
+     )
     WHERE h.is_flexi = false
     GROUP BY m.associatenumber
 ),
@@ -248,7 +277,7 @@ leave_agg AS (
 base AS (
     SELECT
         m.associatenumber, m.filterstatus, m.fullname, m.engagement, m.phone,
-        m.mode, m.effectivedate, m.doj,
+        m.mode, m.effectivedate, m.doj, m.depb,
         c.attendance_date,
         p.punch_in, p.punch_out,
         sc.reporting_time, sc.exit_time,
@@ -275,7 +304,30 @@ base AS (
     LEFT JOIN leave_agg la
            ON la.applicantid = m.associatenumber
           AND la.attendance_date = c.attendance_date
-    WHERE m.mode = 'Offline'    -- filter early
+    -- WHERE m.mode = 'Offline'
+    WHERE 1=1
+      AND (
+          -- Not a holiday for this member's location
+          NOT EXISTS (
+              SELECT 1
+              FROM holiday_set h
+              WHERE h.holiday_date = c.attendance_date
+                AND (
+                    h.location IS NULL
+                    OR h.location = m.depb
+                )
+          )
+          -- OR the date is force-enabled by a workday exception for this member's location
+          OR EXISTS (
+              SELECT 1
+              FROM workday_exc w
+              WHERE w.exception_date = c.attendance_date
+                AND (
+                    w.location_id IS NULL
+                    OR w.location_id = m.depb
+                )
+          )
+      )
 ),
 
 -- 10. Apply CASE logic once

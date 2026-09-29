@@ -1247,7 +1247,7 @@ function monthly_attd_associate_export()
     $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
   }
 
-  // NEW: Construct the engagement condition
+  // Construct the engagement condition
   $engagementCondition = '';
   if (!empty($engagementFilter)) {
     $engagementCondition = "AND m.engagement = '" . pg_escape_string($con, $engagementFilter) . "'";
@@ -1343,13 +1343,16 @@ leave_agg AS (
 
 -- 5. Schedule lookup (single pass, uses end_date if available)
 sched AS (
-    SELECT DISTINCT ON (s.associate_number, s.workday, s.start_date)
+    SELECT DISTINCT ON (s.associate_number, s.workday)
         s.associate_number,
         s.workday,
         s.start_date,
+        s.end_date,
         s.reporting_time,
         s.exit_time
     FROM associate_schedule_v2 s
+    WHERE s.start_date <= '$endDate'::date
+      AND (s.end_date IS NULL OR s.end_date >= '$startDate'::date)
     ORDER BY s.associate_number, s.workday, s.start_date DESC
 ),
 
@@ -1386,13 +1389,14 @@ base AS (
                               WHEN 4 THEN 'Thu' WHEN 5 THEN 'Fri' WHEN 6 THEN 'Sat'
                               WHEN 0 THEN 'Sun' END
           AND sc.start_date <= d.attendance_date
+          AND (sc.end_date IS NULL OR sc.end_date >= d.attendance_date)
     LEFT JOIN entry_exc ee
            ON ee.submitted_by = m.associatenumber
           AND ee.exc_date = d.attendance_date
     LEFT JOIN exit_exc xe
            ON xe.submitted_by = m.associatenumber
           AND xe.exc_date = d.attendance_date
-        LEFT JOIN leave_agg la
+    LEFT JOIN leave_agg la
            ON la.applicantid = m.associatenumber
           AND la.attendance_date = d.attendance_date
 ),
@@ -1459,24 +1463,46 @@ final AS (
 )
 
 SELECT
-    associatenumber,
-    filterstatus,
-    fullname,
-    engagement,
-    position,
-    mode,
-    attendance_date,
-    attendance_status,
-    eff_punch_in AS punch_in,
-    eff_punch_out AS punch_out,
-    reporting_time,
-    late_status,
-    exit_status,
-    exception_status,
-    COUNT(*) FILTER (WHERE attendance_status = 'P')
-        OVER (PARTITION BY associatenumber) AS attended_classes
-FROM final
-ORDER BY associatenumber, attendance_date;
+    f.associatenumber,
+    f.filterstatus,
+    f.fullname,
+    f.engagement,
+    f.position,
+    f.mode,
+    f.attendance_date,
+    f.attendance_status,
+    f.eff_punch_in   AS punch_in,
+    f.eff_punch_out  AS punch_out,
+    f.reporting_time,
+    f.late_status,
+    f.exit_status,
+    f.exception_status,
+    agg.attended_classes,
+    agg.missing_punch_out_count,
+    agg.missing_punch_out_dates
+FROM final f
+LEFT JOIN (
+    SELECT
+        associatenumber,
+        ROUND(
+            (
+                COUNT(*) FILTER (WHERE eff_punch_in IS NOT NULL AND eff_punch_out IS NOT NULL)::numeric
+                - COUNT(*) FILTER (WHERE late_status = 'HF')::numeric / 2
+            ), 1
+        ) AS attended_classes,
+        COUNT(*) FILTER (WHERE eff_punch_in IS NOT NULL AND eff_punch_out IS NULL)
+            AS missing_punch_out_count,
+        STRING_AGG(
+            CASE WHEN eff_punch_in IS NOT NULL AND eff_punch_out IS NULL
+                 THEN attendance_date::text
+                 ELSE NULL
+            END, ', '
+            ORDER BY attendance_date
+        ) AS missing_punch_out_dates
+    FROM final
+    GROUP BY associatenumber
+) agg ON agg.associatenumber = f.associatenumber
+ORDER BY f.associatenumber, f.attendance_date;
 ";
   $result = pg_query($con, $query);
 

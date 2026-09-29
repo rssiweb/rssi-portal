@@ -173,13 +173,16 @@ leave_agg AS (
 
 -- 5. Schedule lookup (single pass, uses end_date if available)
 sched AS (
-    SELECT DISTINCT ON (s.associate_number, s.workday, s.start_date)
+    SELECT DISTINCT ON (s.associate_number, s.workday)
         s.associate_number,
         s.workday,
         s.start_date,
+        s.end_date,
         s.reporting_time,
         s.exit_time
     FROM associate_schedule_v2 s
+    WHERE s.start_date <= '$endDate'::date
+      AND (s.end_date IS NULL OR s.end_date >= '$startDate'::date)
     ORDER BY s.associate_number, s.workday, s.start_date DESC
 ),
 
@@ -209,13 +212,14 @@ base AS (
     LEFT JOIN punch_agg p
            ON p.user_id = m.associatenumber
           AND p.punch_date = d.attendance_date
-    LEFT JOIN sched sc
+        LEFT JOIN sched sc
            ON sc.associate_number = m.associatenumber
           AND sc.workday = CASE EXTRACT(DOW FROM d.attendance_date)
                               WHEN 1 THEN 'Mon' WHEN 2 THEN 'Tue' WHEN 3 THEN 'Wed'
                               WHEN 4 THEN 'Thu' WHEN 5 THEN 'Fri' WHEN 6 THEN 'Sat'
                               WHEN 0 THEN 'Sun' END
           AND sc.start_date <= d.attendance_date
+          AND (sc.end_date IS NULL OR sc.end_date >= d.attendance_date)
     LEFT JOIN entry_exc ee
            ON ee.submitted_by = m.associatenumber
           AND ee.exc_date = d.attendance_date
@@ -289,24 +293,43 @@ final AS (
 )
 
 SELECT
-    associatenumber,
-    filterstatus,
-    fullname,
-    engagement,
-    position,
-    mode,
-    attendance_date,
-    attendance_status,
-    eff_punch_in AS punch_in,
-    eff_punch_out AS punch_out,
-    reporting_time,
-    late_status,
-    exit_status,
-    exception_status,
-    COUNT(*) FILTER (WHERE attendance_status = 'P')
-        OVER (PARTITION BY associatenumber) AS attended_classes
-FROM final
-ORDER BY associatenumber, attendance_date;
+    f.associatenumber,
+    f.filterstatus,
+    f.fullname,
+    f.engagement,
+    f.position,
+    f.mode,
+    f.attendance_date,
+    f.attendance_status,
+    f.eff_punch_in   AS punch_in,
+    f.eff_punch_out  AS punch_out,
+    f.reporting_time,
+    f.late_status,
+    f.exit_status,
+    f.exception_status,
+    agg.attended_classes,
+    agg.missing_punch_out_count,
+    agg.missing_punch_out_dates
+FROM final f
+LEFT JOIN (
+    SELECT
+        associatenumber,
+        ( COUNT(*) FILTER (WHERE eff_punch_in IS NOT NULL AND eff_punch_out IS NOT NULL)::numeric
+          - COUNT(*) FILTER (WHERE late_status = 'HF')::numeric / 2
+        ) AS attended_classes,
+        COUNT(*) FILTER (WHERE eff_punch_in IS NOT NULL AND eff_punch_out IS NULL)
+            AS missing_punch_out_count,
+        STRING_AGG(
+            CASE WHEN eff_punch_in IS NOT NULL AND eff_punch_out IS NULL
+                 THEN attendance_date::text
+                 ELSE NULL
+            END, ', '
+            ORDER BY attendance_date
+        ) AS missing_punch_out_dates
+    FROM final
+    GROUP BY associatenumber
+) agg ON agg.associatenumber = f.associatenumber
+ORDER BY f.associatenumber, f.attendance_date;
 ";
 
     $result = pg_query($con, $query);
@@ -631,6 +654,7 @@ ORDER BY associatenumber, attendance_date;
                                                     <th>Category</th>
                                                     <th>Status</th>
                                                     <th>Present</th>
+                                                    <th>Missing Punch-Out</th>
                                                     <?php foreach ($dates as $date): ?>
                                                         <th><?= date("j", strtotime($date)) ?> (In)</th>
                                                         <th><?= date("j", strtotime($date)) ?> (Out)</th>
@@ -646,7 +670,25 @@ ORDER BY associatenumber, attendance_date;
                                                         <td><?= htmlspecialchars($first['fullname']) ?></td>
                                                         <td><?= htmlspecialchars($first['engagement']) ?></td>
                                                         <td><?= htmlspecialchars($first['filterstatus']) ?></td>
-                                                        <td><?= htmlspecialchars($first['attended_classes']) ?></td>
+                                                        <td>
+                                                            <?php
+                                                            $v = (float)$first['attended_classes'];
+                                                            echo htmlspecialchars(rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.'));
+                                                            ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php
+                                                            $mpCount = (int)($first['missing_punch_out_count'] ?? 0);
+                                                            if ($mpCount > 0) {
+                                                                $datesStr = $first['missing_punch_out_dates'] ?? '';
+                                                                // Convert "2026-09-04, 2026-09-12" → "4, 12"
+                                                                $days = array_map(fn($d) => date('j', strtotime(trim($d))), explode(',', $datesStr));
+                                                                echo htmlspecialchars($mpCount . ' (' . implode(', ', $days) . ')');
+                                                            } else {
+                                                                echo 'None';
+                                                            }
+                                                            ?>
+                                                        </td>
                                                         <?php foreach ($dates as $date):
                                                             if (isset($rowsByDate[$date])) {
                                                                 $row = $rowsByDate[$date];
