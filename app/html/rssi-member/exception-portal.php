@@ -70,12 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Only proceed if no existing pending/approved request found for same date(s)
     if (!$duplicateRequest) {
-        // Generate a unique ID for the request
-        $id = uniqid();
 
         // Prepare SQL statement for insertion
-        $sql = "INSERT INTO exception_requests (id, exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by, status) 
-        VALUES ('$id', '$exceptionType', '$subExceptionType'," .
+        $sql = "INSERT INTO exception_requests (exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by, status) 
+        VALUES ('$exceptionType', '$subExceptionType'," .
             ($startDateTime ? "'$startDateTime'" : "NULL") . ", " .
             ($endDateTime ? "'$endDateTime'" : "NULL") . ", " .
             "'$reason', '$now', '$submittedBy', 'Pending')";
