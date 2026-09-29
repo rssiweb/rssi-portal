@@ -1144,6 +1144,8 @@ function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
 
   $csvHeaders[] = 'Status';
   $csvHeaders[] = 'Present';
+  $csvHeaders[] = 'Missing Punch-Out (Count)';
+  $csvHeaders[] = 'Missing Punch-Out (Days)';
 
   fputcsv($output, $csvHeaders);
 
@@ -1175,6 +1177,19 @@ function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
       // Initialize other columns
       $associateData[$associateNumber]['Status'] = $array['filterstatus'];
       $associateData[$associateNumber]['Present'] = $array['attended_classes'];
+
+      // Format Missing Punch-Out (Days) as "4, 12, 26"
+      $mpDates = '';
+      if (!empty($array['missing_punch_out_dates'])) {
+        $days = array_map(
+          fn($d) => date('j', strtotime(trim($d))),
+          explode(',', $array['missing_punch_out_dates'])
+        );
+        $mpDates = implode(', ', $days);
+      }
+
+      $associateData[$associateNumber]['Missing Punch-Out (Count)'] = $array['missing_punch_out_count'] ?? 0;
+      $associateData[$associateNumber]['Missing Punch-Out (Days)']  = $mpDates;
     }
 
     // Assign punch in and out times to the respective date columns
