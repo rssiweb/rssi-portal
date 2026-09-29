@@ -665,29 +665,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $masterForDefault = pg_fetch_assoc(pg_query(
                         $con,
                         "SELECT type_of_admission, class, preferredbranch
-                         FROM rssimyprofile_student
-                         WHERE student_id = '$search_id'"
+                        FROM rssimyprofile_student
+                        WHERE student_id = '$search_id'"
                     ));
 
                     $defaultCategory     = $masterForDefault['type_of_admission'] ?? '';
                     $defaultClass        = $masterForDefault['class'] ?? '';
-                    $defaultLocationName = $masterForDefault['preferredbranch'] ?? '';
+                    $defaultLocationId   = $masterForDefault['preferredbranch'] ?? null;  // already an ID
 
-                    // Resolve default location_id from name
-                    $defaultLocationId = null;
-                    if (!empty($defaultLocationName)) {
-                        $locRow = pg_fetch_assoc(pg_query(
-                            $con,
-                            "SELECT id FROM office_locations
-                             WHERE name = '" . pg_escape_string($con, $defaultLocationName) . "'
-                             LIMIT 1"
-                        ));
-                        if ($locRow) {
-                            $defaultLocationId = (int)$locRow['id'];
-                        }
-                    }
-
-                    $defaultLocValue = $defaultLocationId ? $defaultLocationId : 'NULL';
+                    $defaultLocValue = $defaultLocationId ? (int)$defaultLocationId : 'NULL';
                     $doaDate         = date('Y-m-d', strtotime($doa));
                     $prevDay         = date('Y-m-d', strtotime($selectedMonth . ' -1 day'));
 
@@ -786,18 +772,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // UPDATE STUDENT MASTER (IF CURRENT)
                 // ----------------------------------------------
                 if (strtotime($effective_from) <= strtotime(date('Y-m-01'))) {
-                    $escapedLocationName = $locationName !== null
-                        ? "'" . pg_escape_string($con, $locationName) . "'"
-                        : "NULL";
-
                     $escapedTypeOfAdmission = pg_escape_string($con, $type_of_admission);
                     $escapedClass           = pg_escape_string($con, $class);
+
+                    // FIX: Use location_id (integer) instead of location name (string)
+                    $preferredBranchValue = $location_id ? (int)$location_id : 'NULL';
 
                     pg_query($con, "
         UPDATE rssimyprofile_student
         SET type_of_admission = '$escapedTypeOfAdmission',
             class = '$escapedClass',
-            preferredbranch = $escapedLocationName,
+            preferredbranch = $preferredBranchValue,
             updated_by = '$updated_by',
             updated_on = NOW()
         WHERE student_id = '$search_id'
@@ -1782,11 +1767,11 @@ foreach ($card_access_levels as $card => $required_level) {
                                                                                                 </p>
                                                                                                 <p class="mb-1">
                                                                                                     <strong>Class:</strong>
-                                                                                                    <span id="current-class-display"><?php echo htmlspecialchars($currentClass ?? '—'); ?></span>
+                                                                                                    <span id="current-class-display"><?php echo htmlspecialchars($currentClass ?? 'No class found'); ?></span>
                                                                                                 </p>
                                                                                                 <p class="mb-1">
                                                                                                     <strong>Location:</strong>
-                                                                                                    <span id="current-location-display"><?php echo htmlspecialchars($currentLocationName ?? '—'); ?></span>
+                                                                                                    <span id="current-location-display"><?php echo htmlspecialchars($currentLocationName ?? 'No location found'); ?></span>
                                                                                                 </p>
                                                                                                 <p class="mb-1">
                                                                                                     <strong>Effective From:</strong>
@@ -3159,14 +3144,9 @@ foreach ($card_access_levels as $card => $required_level) {
                 $('#modal-type-of-admission-' + studentId).val('<?php echo $array["type_of_admission"] ?? ""; ?>');
 
                 // Pre-select location by matching the preferredbranch name against option text
-                const currentLocationName = '<?php echo addslashes($array["preferredbranch"] ?? ""); ?>';
-                if (currentLocationName) {
-                    $('#modal-location-select-' + studentId + ' option').each(function() {
-                        if ($(this).text().trim().toLowerCase() === currentLocationName.trim().toLowerCase()) {
-                            $(this).prop('selected', true);
-                            return false; // break
-                        }
-                    });
+                const currentLocationId = '<?php echo (int)($array["preferredbranch"] ?? 0); ?>';
+                if (currentLocationId > 0) {
+                    $('#modal-location-select-' + studentId).val(currentLocationId);
                 }
 
                 // Always keep Effective From blank
