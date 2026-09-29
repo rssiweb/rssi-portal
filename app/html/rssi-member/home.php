@@ -1632,7 +1632,7 @@ if (!function_exists('makeClickableLinks')) {
 
       // Fetch calendar dates from API
       async function fetchCalendarDates(start, end) {
-        const response = await fetch(`/../calendar_dates_api.php?start=${start}&end=${end}`);
+        const response = await fetch(`calendar_dates_api.php?start=${start}&end=${end}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -1715,7 +1715,7 @@ if (!function_exists('makeClickableLinks')) {
 
       // Fetch detailed date information
       async function fetchDateDetails(dateStr) {
-        const response = await fetch(`/../date_details_api.php?date=${dateStr}`);
+        const response = await fetch(`date_details_api.php?date=${dateStr}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

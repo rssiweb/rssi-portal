@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../bootstrap.php';
-include(__DIR__ . "/../util/login_util.php");
+require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/login_util.php");
 
 // Set headers first to ensure JSON response
 header('Content-Type: application/json');
@@ -14,6 +14,24 @@ ini_set('log_errors', 1);
 $isSearchRequest = isset($_GET['search']) && $_GET['search'] !== '';
 $date = $_GET['date'] ?? date('Y-m-d');
 
+// Admins see everything; others are scoped to their department
+$isAdmin = (($role ?? '') === 'Admin');
+
+$userDepb = null;
+if (!$isAdmin && !empty($associatenumber)) {
+    $depbRes = pg_query_params(
+        $con,
+        "SELECT depb FROM rssimyaccount_members WHERE associatenumber = \$1",
+        [$associatenumber]
+    );
+    if ($depbRes) {
+        $depbRow = pg_fetch_assoc($depbRes);
+        if ($depbRow && $depbRow['depb'] !== null && $depbRow['depb'] !== '') {
+            $userDepb = (int)$depbRow['depb'];
+        }
+    }
+}
+
 try {
     // ========== HANDLE SEARCH REQUEST (for Select2 dropdown) ==========
     if ($isSearchRequest) {
@@ -25,7 +43,17 @@ try {
             exit;
         }
 
-        // Search events across all dates
+        $locationFilter = '';
+        $searchParams   = ["%$searchTerm%"];
+        if (!$isAdmin) {
+            if ($userDepb !== null) {
+                $locationFilter = " AND (e.location IS NULL OR e.location = \$2) ";
+                $searchParams[] = $userDepb;
+            } else {
+                $locationFilter = " AND e.location IS NULL ";
+            }
+        }
+
         $searchQuery = "
             SELECT 
                 e.id, 
@@ -44,12 +72,12 @@ try {
             FROM internal_events e 
             LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
             LEFT JOIN event_types et ON e.event_type = et.id
-            WHERE e.event_name ILIKE $1 
-               OR CAST(e.id AS TEXT) ILIKE $1
+            WHERE (e.event_name ILIKE \$1 OR CAST(e.id AS TEXT) ILIKE \$1)
+              $locationFilter
             ORDER BY e.event_date DESC
             LIMIT 20";
 
-        $searchResult = pg_query_params($con, $searchQuery, ["%$searchTerm%"]);
+        $searchResult = pg_query_params($con, $searchQuery, $searchParams);
 
         if (!$searchResult) {
             echo json_encode(['results' => [], 'error' => pg_last_error($con)]);
@@ -119,19 +147,27 @@ try {
         'error' => null
     ];
 
-    // Fetch holidays for this specific date (with location name)
-    $holidayResult = pg_query_params(
-        $con,
-        "SELECT h.holiday_name,
-                h.holiday_date::date AS date,
-                h.location,
-                ol.name AS location_name
-         FROM holidays h
-         LEFT JOIN office_locations ol ON ol.id = h.location
-         WHERE h.holiday_date = $1
-         ORDER BY h.holiday_name",
-        [$date]
-    );
+    // Fetch holidays for this specific date, scoped to user's department
+    $holidaySql = "
+        SELECT h.holiday_name,
+               h.holiday_date::date AS date,
+               h.location,
+               ol.name AS location_name
+        FROM holidays h
+        LEFT JOIN office_locations ol ON ol.id = h.location
+        WHERE h.holiday_date = \$1
+    ";
+    $holidayParams = [$date];
+    if (!$isAdmin) {
+        if ($userDepb !== null) {
+            $holidaySql .= " AND (h.location IS NULL OR h.location = \$2) ";
+            $holidayParams[] = $userDepb;
+        } else {
+            $holidaySql .= " AND h.location IS NULL ";
+        }
+    }
+    $holidaySql .= " ORDER BY h.holiday_name";
+    $holidayResult = pg_query_params($con, $holidaySql, $holidayParams);
 
     if ($holidayResult) {
         while ($row = pg_fetch_assoc($holidayResult)) {
@@ -144,23 +180,31 @@ try {
         }
     }
 
-    // Fetch events for this specific date
-    $eventResult = pg_query_params(
-        $con,
-        "SELECT e.*, 
-                u.fullname AS created_by_name, 
-                u2.fullname AS updated_by_name,
-                et.display_name AS event_type_name,
-                ol.name AS location_name
-         FROM internal_events e 
-         LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
-         LEFT JOIN rssimyaccount_members u2 ON e.updated_by = u2.associatenumber 
-         LEFT JOIN event_types et ON e.event_type = et.id
-         LEFT JOIN office_locations ol ON e.location = ol.id
-         WHERE e.event_date = $1 
-         ORDER BY e.created_at",
-        [$date]
-    );
+    // Fetch events for this specific date, scoped to user's department
+    $eventSql = "
+        SELECT e.*, 
+               u.fullname AS created_by_name, 
+               u2.fullname AS updated_by_name,
+               et.display_name AS event_type_name,
+               ol.name AS location_name
+        FROM internal_events e 
+        LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
+        LEFT JOIN rssimyaccount_members u2 ON e.updated_by = u2.associatenumber 
+        LEFT JOIN event_types et ON e.event_type = et.id
+        LEFT JOIN office_locations ol ON e.location = ol.id
+        WHERE e.event_date = \$1
+    ";
+    $eventParams = [$date];
+    if (!$isAdmin) {
+        if ($userDepb !== null) {
+            $eventSql .= " AND (e.location IS NULL OR e.location = \$2) ";
+            $eventParams[] = $userDepb;
+        } else {
+            $eventSql .= " AND e.location IS NULL ";
+        }
+    }
+    $eventSql .= " ORDER BY e.created_at";
+    $eventResult = pg_query_params($con, $eventSql, $eventParams);
 
     if ($eventResult) {
         while ($row = pg_fetch_assoc($eventResult)) {
