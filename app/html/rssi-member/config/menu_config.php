@@ -476,12 +476,11 @@ class MenuConfig
                 ]
             ],
 
-            'exception_view' => [
+            'class_days_exception' => [
                 'section' => 'Schedule Hub',
                 'sidebar_id' => 'rostermanagement',
                 'pages' => [
-                    'exception_view.php' => ['title' => 'Class Days Exceptions', 'show_in_menu' => true],
-                    'class_days_exception.php' => ['title' => 'Class Days Exception', 'show_in_menu' => false]
+                    'class_days_exception.php' => ['title' => 'Class Days Exceptions', 'show_in_menu' => true]
                 ]
             ],
 
