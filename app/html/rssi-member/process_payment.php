@@ -27,6 +27,7 @@ function cleanArrayParam($param)
 // Get and validate all required parameters - with proper array handling
 $redirectParams = [
     'status' => $_REQUEST['status'] ?? 'Active',
+    'location' => $_REQUEST['location'] ?? '',
     'month_year' => $_REQUEST['month_year'] ?? date('Y-m'), // e.g., 2025-02
     'search_term' => $_REQUEST['search_term'] ?? ''
 ];
