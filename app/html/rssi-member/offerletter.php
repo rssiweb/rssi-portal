@@ -332,19 +332,33 @@ $documents = [
                     <tbody>
                         <tr>
                             <td>
-                                <?php echo @date("d/m/Y", strtotime($date)) . '<br>RSSI/' . $array['associatenumber'] . '/' . htmlspecialchars(locationName($locationMap, $array['depb'])) . '<br><br>
+                                <?= @date("d/m/Y", strtotime($date)) ?><br>
+                                RSSI/<?= $array['associatenumber'] ?>/<?= htmlspecialchars(locationName($locationMap, $array['depb'])) ?><br><br>
 
-                                        ' . $array['fullname'] . '<br>
-                                        ' . $array['currentaddress'] . '<br><br>
+                                <?= $array['fullname'] ?><br>
+                                <?= $array['currentaddress'] ?><br><br>
 
-                                        <b>Sub: Letter of Offer</b><br><br>
+                                <b>Sub: Letter of Offer</b><br><br>
 
-                                        Dear ' . strtok($array['fullname'], ' ') . ',<br><br>
+                                Dear <?= strtok($array['fullname'], ' ') ?>,<br><br>
 
-                                        <p>Thank you for exploring career opportunities with Rina Shiksha Sahayak Foundation (RSSI). You have successfully completed our initial selection process and we are pleased to make you an offer.</p>
+                                <?php if (!$isVolunteer): ?>
+                                    <p>
+                                        Thank you for exploring career opportunities with Rina Shiksha Sahayak Foundation (RSSI).
+                                        You have successfully completed our initial selection process and we are pleased to make you an offer.
+                                    </p>
+                                <?php else: ?>
+                                    <p>
+                                        Thank you for your interest in volunteering with Rina Shiksha Sahayak Foundation (RSSI).
+                                        You have successfully completed our initial selection process, and we are pleased to welcome you as a volunteer with our organization.
+                                    </p>
+                                <?php endif; ?>
 
-                                        <p>This offer is based on your profile and performance in the selection process. You have been selected for the position of <b>' . $array['position'] . ' (' . $array['job_type'] . ')</b>.</p>'
-                                ?>
+                                <p>
+                                    This offer is based on your profile and performance in the selection process.
+                                    You have been selected for the position of
+                                    <b><?= $array['position'] ?> (<?= $array['job_type'] ?>)</b>.
+                                </p>
 
                                 <p>Please sign the offer letter and email the scanned copy to us at info@rssi.in as a token of your acceptance. If not accepted within 3 calendar days, it will be construed that you are not interested in this employment and this offer will be automatically withdrawn.</p>
 
@@ -429,11 +443,11 @@ $documents = [
                                                 <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
                                             <?php endif; ?>
                                         <?php } ?>
+                                        <?php if (!($isVolunteer)): ?>
+                                            <li>Leaves will be governed by the Organization's Leave Policy. The Organization retains the right to amend, modify, or replace the Leave Policy as deemed necessary. Any updates to the Leave Policy will be communicated to associates through the Organization's internal communication channels.</li>
 
-                                        <li>Leaves will be governed by the Organization's Leave Policy. The Organization retains the right to amend, modify, or replace the Leave Policy as deemed necessary. Any updates to the Leave Policy will be communicated to associates through the Organization's internal communication channels.</li>
-
-                                        <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
-
+                                            <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
+                                        <?php endif; ?>
                                         <?php
                                         // Show this clause only when:
                                         // 1) remove_min_duration is NOT "yes"
@@ -452,97 +466,99 @@ $documents = [
                                         ?>
 
                                         <li>You are expected to be active and responsive throughout your service period.</li>
-                                        <li>
-                                            <p>Working Hours:</p>
-                                            <?php if ($array['project'] !== "hvco_3_month" && $array['project'] !== "srijan") { ?>
-                                                <?php
-                                                // Choose custom value if present, else default
-                                                $finalWorkday = !empty($customWorkingDays) ? $customWorkingDays : $workday;
-                                                $finalWorkingHours = !empty($customWorkingHours) ? $customWorkingHours : $workinghours;
-                                                ?>
+                                        <?php if (!($isVolunteer)): ?>
+                                            <li>
+                                                <p>Working Hours:</p>
+                                                <?php if ($array['project'] !== "hvco_3_month" && $array['project'] !== "srijan") { ?>
+                                                    <?php
+                                                    // Choose custom value if present, else default
+                                                    $finalWorkday = !empty($customWorkingDays) ? $customWorkingDays : $workday;
+                                                    $finalWorkingHours = !empty($customWorkingHours) ? $customWorkingHours : $workinghours;
+                                                    ?>
+                                                    <?php if ($isIntern) { ?>
+                                                        <p>This is a <?php echo $mintenure; ?> month program.</p>
+                                                    <?php } ?>
+                                                    <p>
+                                                        The work schedule comprises <?php echo $finalWorkday; ?> days per week,
+                                                        with each day requiring a <?php echo $finalWorkingHours; ?> commitment,
+                                                        inclusive of essential administrative tasks as required.
+                                                    </p>
+                                                <?php } ?>
+                                                <?php if ($array['project'] == "hvco_3_month") { ?>
+                                                    <p>
+                                                        This is a three (3) month program.
+                                                    </p>
+                                                    <p>
+                                                        The work schedule consists of two (2) days per week, with one full day requiring a commitment of seven (7) hours and forty-five (45) minutes and one half day requiring a four (4) hour commitment. Both schedules include essential administrative responsibilities, as required. The four-hour shift may be assigned in either the morning or afternoon, based on organizational requirements.
+                                                    </p>
+                                                <?php } ?>
+
+                                                <?php if ($array['project'] == "srijan") { ?>
+                                                    <p>
+                                                        This is a two (2) month program.
+                                                    </p>
+                                                    <p>
+                                                        The work schedule comprises four (4) days per week, with each day requiring a four (4) hour commitment, inclusive of essential administrative responsibilities as required. You will be assigned one month in the morning shift and one month in the afternoon shift, based on business requirements.
+                                                    </p>
+                                                <?php } ?>
+
                                                 <?php if ($isIntern) { ?>
-                                                    <p>This is a <?php echo $mintenure; ?> month program.</p>
+                                                    <P>
+                                                        Adherence to the defined timeline and attendance requirements is a mandatory criterion for eligibility to receive the completion certificate. In the event that the candidate discontinues the program prior to completion, no certificate or credit shall be issued for the period completed.
+                                                    </P>
                                                 <?php } ?>
                                                 <p>
-                                                    The work schedule comprises <?php echo $finalWorkday; ?> days per week,
-                                                    with each day requiring a <?php echo $finalWorkingHours; ?> commitment,
-                                                    inclusive of essential administrative tasks as required.
+                                                    The regular working hours may be subject to an extension of up to a maximum of 30 minutes,
+                                                    contingent upon real-time demands pertaining to non-academic activities and similar operational necessities.
+                                                    You should be flexible in terms of working hours.
                                                 </p>
-                                            <?php } ?>
-                                            <?php if ($array['project'] == "hvco_3_month") { ?>
-                                                <p>
-                                                    This is a three (3) month program.
-                                                </p>
-                                                <p>
-                                                    The work schedule consists of two (2) days per week, with one full day requiring a commitment of seven (7) hours and forty-five (45) minutes and one half day requiring a four (4) hour commitment. Both schedules include essential administrative responsibilities, as required. The four-hour shift may be assigned in either the morning or afternoon, based on organizational requirements.
-                                                </p>
-                                            <?php } ?>
-
-                                            <?php if ($array['project'] == "srijan") { ?>
-                                                <p>
-                                                    This is a two (2) month program.
-                                                </p>
-                                                <p>
-                                                    The work schedule comprises four (4) days per week, with each day requiring a four (4) hour commitment, inclusive of essential administrative responsibilities as required. You will be assigned one month in the morning shift and one month in the afternoon shift, based on business requirements.
-                                                </p>
-                                            <?php } ?>
-
-                                            <?php if ($isIntern) { ?>
-                                                <P>
-                                                    Adherence to the defined timeline and attendance requirements is a mandatory criterion for eligibility to receive the completion certificate. In the event that the candidate discontinues the program prior to completion, no certificate or credit shall be issued for the period completed.
-                                                </P>
-                                            <?php } ?>
-                                            <p>
-                                                The regular working hours may be subject to an extension of up to a maximum of 30 minutes,
-                                                contingent upon real-time demands pertaining to non-academic activities and similar operational necessities.
-                                                You should be flexible in terms of working hours.
-                                            </p>
-                                        </li>
-                                        <li>
-                                            <p>Primary responsibility:</p>
-                                            Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.<br><br>
-                                            <ol type="A">
-                                                <?php
-                                                $position_doc = strtolower($array['position']);
-                                                $engagement_doc = strtolower($array['engagement']);
-                                                $output = [];
-
-                                                /* 1. If position intern */
-                                                if (stripos($position_doc, "intern") !== false) {
-                                                    $output[] = $documents["intern_handbook"];
-                                                    $output[] = $documents["intern_orientation"];
-                                                }
-
-                                                /* 2. If position centre incharge AND engagement employee → CI + Teacher docs */ elseif (strpos($position_doc, "centre incharge") !== false && $engagement_doc === "employee") {
-                                                    $output[] = $documents["ci_key_responsibilities"];
-                                                    $output[] = $documents["teacher_overview"];
-                                                }
-
-                                                /* 3. engagement employee AND position teacher → teacher doc */ elseif ($engagement_doc === "employee" && strpos($position_doc, "teacher") !== false) {
-                                                    $output[] = $documents["teacher_overview"];
-                                                }
-
-                                                /* 4. position teacher AND engagement volunteer → teacher doc */ elseif ($engagement_doc === "volunteer" && strpos($position_doc, "teacher") !== false) {
-                                                    $output[] = $documents["teacher_overview"];
-                                                }
-
-                                                /* 5. engagement volunteer AND NOT a teacher → no docs (do nothing) */ elseif ($engagement_doc === "volunteer") {
-                                                    $output = []; // explicit → no docs
-                                                }
-
-                                                /* Default: no docs unless specified above */ else {
+                                            </li>
+                                            <li>
+                                                <p>Primary responsibility:</p>
+                                                Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.<br><br>
+                                                <ol type="A">
+                                                    <?php
+                                                    $position_doc = strtolower($array['position']);
+                                                    $engagement_doc = strtolower($array['engagement']);
                                                     $output = [];
-                                                }
 
-                                                /* Print final results */
-                                                foreach ($output as $doc) {
-                                                    list($title, $url) = $doc;
-                                                    echo "<li><a href=\"$url\" target=\"_blank\">$title</a></li>";
-                                                }
-                                                ?>
-                                            </ol>
+                                                    /* 1. If position intern */
+                                                    if (stripos($position_doc, "intern") !== false) {
+                                                        $output[] = $documents["intern_handbook"];
+                                                        $output[] = $documents["intern_orientation"];
+                                                    }
 
-                                        </li>
+                                                    /* 2. If position centre incharge AND engagement employee → CI + Teacher docs */ elseif (strpos($position_doc, "centre incharge") !== false && $engagement_doc === "employee") {
+                                                        $output[] = $documents["ci_key_responsibilities"];
+                                                        $output[] = $documents["teacher_overview"];
+                                                    }
+
+                                                    /* 3. engagement employee AND position teacher → teacher doc */ elseif ($engagement_doc === "employee" && strpos($position_doc, "teacher") !== false) {
+                                                        $output[] = $documents["teacher_overview"];
+                                                    }
+
+                                                    /* 4. position teacher AND engagement volunteer → teacher doc */ elseif ($engagement_doc === "volunteer" && strpos($position_doc, "teacher") !== false) {
+                                                        $output[] = $documents["teacher_overview"];
+                                                    }
+
+                                                    /* 5. engagement volunteer AND NOT a teacher → no docs (do nothing) */ elseif ($engagement_doc === "volunteer") {
+                                                        $output = []; // explicit → no docs
+                                                    }
+
+                                                    /* Default: no docs unless specified above */ else {
+                                                        $output = [];
+                                                    }
+
+                                                    /* Print final results */
+                                                    foreach ($output as $doc) {
+                                                        list($title, $url) = $doc;
+                                                        echo "<li><a href=\"$url\" target=\"_blank\">$title</a></li>";
+                                                    }
+                                                    ?>
+                                                </ol>
+
+                                            </li>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                     <li>
                                         It is strictly prohibited to discuss any confidential information
