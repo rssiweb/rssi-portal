@@ -22,6 +22,10 @@ $settlementDate = $_GET['settlement_date'] ?? date('Y-m-d');
 $status = $_GET['status'] ?? 'unsettled'; // 'unsettled' or 'settled'
 $location = $_GET['location'] ?? '';
 
+// Date range for settled view (default: last 30 days)
+$dateFrom = $_GET['date_from'] ?? date('Y-m-d', strtotime('-30 days'));
+$dateTo   = $_GET['date_to']   ?? date('Y-m-d');
+
 // Fetch locations for dropdown
 $locationQuery = "SELECT id, name FROM office_locations WHERE is_active = true ORDER BY name";
 $locationResult = pg_query($con, $locationQuery);
@@ -56,9 +60,9 @@ WHERE p.is_settled = FALSE";
     // All three location columns now store IDs — compare directly.
     if (!empty($location)) {
         $locationId = pg_escape_string($con, $location);
-        $paymentsQuery .= " AND (s.preferredbranch = '$locationId'
-                            OR m.basebranch = '$locationId'
-                            OR h.location_id = '$locationId')";
+        $paymentsQuery .= " AND (s.preferredbranch::int = '$locationId'::int
+                            OR m.basebranch::int      = '$locationId'::int
+                            OR h.location_id          = '$locationId'::int)";
     }
 
     $paymentsQuery .= " ORDER BY p.id DESC";
@@ -80,9 +84,9 @@ WHERE p.is_settled = FALSE";
     // Add location filter to summary if selected
     if (!empty($location)) {
         $locationId = pg_escape_string($con, $location);
-        $summaryQuery .= " AND (s.preferredbranch = '$locationId'
-                            OR m.basebranch = '$locationId'
-                            OR h.location_id = '$locationId')";
+        $summaryQuery .= " AND (s.preferredbranch::int = '$locationId'::int
+                            OR m.basebranch::int      = '$locationId'::int
+                            OR h.location_id          = '$locationId'::int)";
     }
 
     $summaryResult = pg_query($con, $summaryQuery);
@@ -98,13 +102,22 @@ LEFT JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
 LEFT JOIN public_health_records h ON s.settled_by = h.id::text
 LEFT JOIN (
     SELECT loc_data.settlement_id,
-           STRING_AGG(DISTINCT ol.name, ', ') AS location_name
+           STRING_AGG(DISTINCT ol.name, ', ' ORDER BY ol.name) AS location_name
     FROM (
-        SELECT sp.settlement_id, stu.preferredbranch::int AS location_id
-        FROM settlement_payments sp
-        JOIN fee_payments fp ON sp.payment_id = fp.id
-        LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
-        WHERE stu.preferredbranch IS NOT NULL
+        SELECT fp.settlement_id, s.preferredbranch::int AS location_id
+        FROM fee_payments fp
+        LEFT JOIN rssimyprofile_student s ON fp.student_id = s.student_id
+        WHERE fp.settlement_id IS NOT NULL AND s.preferredbranch IS NOT NULL
+        UNION
+        SELECT fp.settlement_id, m.basebranch::int AS location_id
+        FROM fee_payments fp
+        LEFT JOIN rssimyaccount_members m ON fp.student_id = m.associatenumber
+        WHERE fp.settlement_id IS NOT NULL AND m.basebranch IS NOT NULL
+        UNION
+        SELECT fp.settlement_id, h.location_id AS location_id
+        FROM fee_payments fp
+        LEFT JOIN public_health_records h ON fp.student_id = h.id::text
+        WHERE fp.settlement_id IS NOT NULL AND h.location_id IS NOT NULL
     ) loc_data
     LEFT JOIN office_locations ol ON ol.id = loc_data.location_id
     GROUP BY loc_data.settlement_id
@@ -112,17 +125,25 @@ LEFT JOIN (
 WHERE 1=1";
 
     // Add location filter if selected
-    // preferredbranch stores the location ID; compare directly.
     if (!empty($location)) {
         $locationId = pg_escape_string($con, $location);
         $settlementsQuery .= " AND s.id IN (
-        SELECT DISTINCT sp.settlement_id
-        FROM settlement_payments sp
-        JOIN fee_payments fp ON sp.payment_id = fp.id
-        LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
-        WHERE stu.preferredbranch = '$locationId'
-    )";
+            SELECT DISTINCT fp.settlement_id
+            FROM fee_payments fp
+            LEFT JOIN rssimyprofile_student s ON fp.student_id = s.student_id
+            LEFT JOIN rssimyaccount_members m ON fp.student_id = m.associatenumber
+            LEFT JOIN public_health_records h ON fp.student_id = h.id::text
+                        WHERE fp.settlement_id IS NOT NULL
+              AND (s.preferredbranch::int = '$locationId'::int
+                   OR m.basebranch::int      = '$locationId'::int
+                   OR h.location_id          = '$locationId'::int)
+        )";
     }
+
+    // Apply date range filter (settled view only)
+    $dateFromEsc = pg_escape_string($con, $dateFrom);
+    $dateToEsc   = pg_escape_string($con, $dateTo);
+    $settlementsQuery .= " AND s.settlement_date BETWEEN '$dateFromEsc' AND '$dateToEsc'";
 
     $settlementsQuery .= " ORDER BY s.settlement_date DESC";
 
@@ -209,10 +230,23 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                         <!-- Filters -->
                                         <form method="get" class="row g-3 mb-4 mt-4">
                                             <input type="hidden" name="page" value="settlement">
-                                            <div class="col-md-2">
-                                                <label for="settlementDate" class="form-label">Settlement Date:</label>
-                                                <input type="date" class="form-control" name="settlement_date" value="<?= $settlementDate ?>">
-                                            </div>
+
+                                            <?php if ($status === 'unsettled'): ?>
+                                                <div class="col-md-2">
+                                                    <label for="settlementDate" class="form-label">Settlement Date:</label>
+                                                    <input type="date" class="form-control" name="settlement_date" value="<?= $settlementDate ?>">
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="col-md-2">
+                                                    <label for="dateFrom" class="form-label">From Date:</label>
+                                                    <input type="date" class="form-control" name="date_from" value="<?= htmlspecialchars($dateFrom) ?>">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label for="dateTo" class="form-label">To Date:</label>
+                                                    <input type="date" class="form-control" name="date_to" value="<?= htmlspecialchars($dateTo) ?>">
+                                                </div>
+                                            <?php endif; ?>
+
                                             <div class="col-md-2">
                                                 <label for="status" class="form-label">Status:</label>
                                                 <select class="form-select" name="status">
@@ -565,7 +599,12 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
 
             // Export button handler
             $("#exportSettlement").click(function() {
-                let url = "export_settlement.php?status=<?= $status ?>&settlement_date=<?= $settlementDate ?>";
+                let url = "export_settlement.php?status=<?= $status ?>";
+                <?php if ($status === 'unsettled'): ?>
+                    url += "&settlement_date=<?= $settlementDate ?>";
+                <?php else: ?>
+                    url += "&date_from=<?= htmlspecialchars($dateFrom) ?>&date_to=<?= htmlspecialchars($dateTo) ?>";
+                <?php endif; ?>
                 const location = $("select[name='location']").val();
                 if (location) {
                     url += "&location=" + encodeURIComponent(location);

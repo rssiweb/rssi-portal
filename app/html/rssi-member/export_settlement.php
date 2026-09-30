@@ -5,8 +5,19 @@ $status = $_GET['status'] ?? 'unsettled';
 $settlementDate = $_GET['settlement_date'] ?? date('Y-m-d');
 $location = $_GET['location'] ?? '';
 
+// Date range for settled view (default: last 30 days)
+$dateFrom = $_GET['date_from'] ?? date('Y-m-d', strtotime('-30 days'));
+$dateTo   = $_GET['date_to']   ?? date('Y-m-d');
+
+// Build a sensible filename per branch
+if ($status === 'settled') {
+    $filename = 'settlement_settled_' . $dateFrom . '_to_' . $dateTo . '.csv';
+} else {
+    $filename = 'settlement_unsettled_' . $settlementDate . '.csv';
+}
+
 header('Content-Type: text/csv; charset=utf-8');
-header('Content-Disposition: attachment; filename=settlement_' . $status . '_' . $settlementDate . '.csv');
+header('Content-Disposition: attachment; filename=' . $filename);
 
 $output = fopen('php://output', 'w');
 
@@ -42,18 +53,18 @@ if ($status === 'unsettled') {
         LEFT JOIN rssimyaccount_members m ON p.student_id = m.associatenumber
         LEFT JOIN public_health_records h ON p.student_id = h.id::text
         LEFT JOIN rssimyaccount_members c ON p.collected_by = c.associatenumber
-        LEFT JOIN office_locations ol_s ON ol_s.id::text = s.preferredbranch::text
-        LEFT JOIN office_locations ol_m ON ol_m.id::text = m.basebranch::text
-        LEFT JOIN office_locations ol_h ON ol_h.id::text = h.location_id::text
+        LEFT JOIN office_locations ol_s ON ol_s.id = s.preferredbranch::int
+        LEFT JOIN office_locations ol_m ON ol_m.id = m.basebranch::int
+        LEFT JOIN office_locations ol_h ON ol_h.id = h.location_id
         WHERE p.is_settled = FALSE";
 
     // Add location filter if selected
     // preferredbranch and basebranch now store location IDs — compare directly.
     if (!empty($location)) {
         $locationId = pg_escape_string($con, $location);
-        $query .= " AND (s.preferredbranch = '$locationId'
-                    OR m.basebranch = '$locationId'
-                    OR h.location_id = '$locationId')";
+        $query .= " AND (s.preferredbranch::int = '$locationId'::int
+                    OR m.basebranch::int      = '$locationId'::int
+                    OR h.location_id          = '$locationId'::int)";
     }
 
     $query .= " ORDER BY p.id DESC";
@@ -93,33 +104,50 @@ if ($status === 'unsettled') {
                  sl.location_name
           FROM settlements s
           JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
-          LEFT JOIN (
+                    LEFT JOIN (
               SELECT loc_data.settlement_id,
-                     STRING_AGG(DISTINCT ol.name, ', ') AS location_name
+                     STRING_AGG(DISTINCT ol.name, ', ' ORDER BY ol.name) AS location_name
               FROM (
-                  SELECT sp.settlement_id, stu.preferredbranch AS location_id
-                  FROM settlement_payments sp
-                  JOIN fee_payments fp ON sp.payment_id = fp.id
-                  LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
-                  WHERE stu.preferredbranch IS NOT NULL
+                  SELECT fp.settlement_id, s.preferredbranch::int AS location_id
+                  FROM fee_payments fp
+                  LEFT JOIN rssimyprofile_student s ON fp.student_id = s.student_id
+                  WHERE fp.settlement_id IS NOT NULL AND s.preferredbranch IS NOT NULL
+                  UNION
+                  SELECT fp.settlement_id, m.basebranch::int AS location_id
+                  FROM fee_payments fp
+                  LEFT JOIN rssimyaccount_members m ON fp.student_id = m.associatenumber
+                  WHERE fp.settlement_id IS NOT NULL AND m.basebranch IS NOT NULL
+                  UNION
+                  SELECT fp.settlement_id, h.location_id AS location_id
+                  FROM fee_payments fp
+                  LEFT JOIN public_health_records h ON fp.student_id = h.id::text
+                  WHERE fp.settlement_id IS NOT NULL AND h.location_id IS NOT NULL
               ) loc_data
-              LEFT JOIN office_locations ol ON ol.id::text = loc_data.location_id::text
+              LEFT JOIN office_locations ol ON ol.id = loc_data.location_id
               GROUP BY loc_data.settlement_id
           ) sl ON s.id = sl.settlement_id
           WHERE 1=1";
 
     // Add location filter if selected
-    // preferredbranch stores the location ID — compare directly.
     if (!empty($location)) {
         $locationId = pg_escape_string($con, $location);
         $query .= " AND s.id IN (
-        SELECT DISTINCT sp.settlement_id
-        FROM settlement_payments sp
-        JOIN fee_payments fp ON sp.payment_id = fp.id
-        LEFT JOIN rssimyprofile_student stu ON fp.student_id = stu.student_id
-        WHERE stu.preferredbranch = '$locationId'
-    )";
+            SELECT DISTINCT fp.settlement_id
+            FROM fee_payments fp
+            LEFT JOIN rssimyprofile_student s ON fp.student_id = s.student_id
+            LEFT JOIN rssimyaccount_members m ON fp.student_id = m.associatenumber
+            LEFT JOIN public_health_records h ON fp.student_id = h.id::text
+            WHERE fp.settlement_id IS NOT NULL
+              AND (s.preferredbranch::int = '$locationId'::int
+                   OR m.basebranch::int      = '$locationId'::int
+                   OR h.location_id          = '$locationId'::int)
+        )";
     }
+
+    // Apply date range filter (settled view)
+    $dateFromEsc = pg_escape_string($con, $dateFrom);
+    $dateToEsc   = pg_escape_string($con, $dateTo);
+    $query .= " AND s.settlement_date BETWEEN '$dateFromEsc' AND '$dateToEsc'";
 
     $query .= " ORDER BY s.settlement_date DESC";
 
