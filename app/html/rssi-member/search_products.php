@@ -77,11 +77,11 @@ if ($addStock) {
     WHERE 1=1
     AND i.is_active = true";
 
-    if ($forStockManagement) {
-        $query .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
-    } else {
-        $query .= " AND i.access_scope = 'public'";
-    }
+    // if ($forStockManagement) {
+    //     $query .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
+    // } else {
+    //     $query .= " AND i.access_scope = 'public'";
+    // }
 
     if (!empty($searchTerm)) {
         $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
@@ -103,11 +103,11 @@ if (!$forStockManagement && !$addStock) {
                    LEFT JOIN stock_item_price sip ON sip.item_id = i.item_id
                    WHERE 1=1";
 
-    if ($forStockManagement) {
-        $countQuery .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
-    } else {
-        $countQuery .= " AND i.access_scope = 'public'";
-    }
+    // if ($forStockManagement) {
+    //     $countQuery .= " AND (i.access_scope IS NULL OR i.access_scope != 'public')";
+    // } else {
+    //     $countQuery .= " AND i.access_scope = 'public'";
+    // }
 
     if (!empty($searchTerm)) {
         $countQuery .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
