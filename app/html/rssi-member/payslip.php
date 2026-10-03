@@ -30,10 +30,14 @@ $employeeid_comp = null;
 // Check user role
 if ($role == 'Admin') {
     // Query to retrieve payslip entry data
-    $result = pg_query_params($con, "SELECT paymonth, payyear, employeeid,payslip_issued_on, * 
+    $result = pg_query_params($con, "SELECT paymonth, payyear, employeeid,payslip_issued_on, *,
+                                     lb.name AS basebranch_name,
+                                     ld.name AS depb_name 
                                      FROM payslip_entry 
                                      LEFT JOIN rssimyaccount_members 
-                                     ON rssimyaccount_members.associatenumber = payslip_entry.employeeid 
+                                     ON rssimyaccount_members.associatenumber = payslip_entry.employeeid
+                                     LEFT JOIN office_locations lb ON lb.id = rssimyaccount_members.basebranch
+                                     LEFT JOIN office_locations ld ON ld.id = rssimyaccount_members.depb 
                                      WHERE payslip_entry_id = $1", array($ref));
 
     // Fetch required data from the result
@@ -238,13 +242,13 @@ foreach ($accountNatures as $accountNature) {
     <?php include 'includes/meta.php' ?>
 
     <?php if ($role != 'Admin') { ?>
-        
+
     <?php } ?>
     <?php if ($role == 'Admin' && $ref != null) { ?>
-        
+
     <?php } ?>
     <?php if ($role == 'Admin' && $ref == null) { ?>
-        
+
     <?php } ?>
 
     <!-- Favicons -->
@@ -407,8 +411,8 @@ foreach ($accountNatures as $accountNature) {
                                                 <?php endforeach; ?>
                                                 Days paid: <?php echo $array['dayspaid'] ?> days
                                             </td>
-                                            <td>Base Br.: <?php echo $array['basebranch'] ?><br>
-                                                Depute Br.: <?php echo $array['depb'] ?>
+                                            <td>Base Br.: <?php echo $array['basebranch_name'] ?><br>
+                                                Depute Br.: <?php echo $array['depb_name'] ?>
                                             </td>
                                         </tr>
                                     </table>

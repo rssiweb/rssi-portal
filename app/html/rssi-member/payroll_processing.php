@@ -29,8 +29,12 @@ if ($associate_number) {
                rssimyaccount_members.fullname AS employee_fullname, 
                rssimyaccount_members.associatenumber AS employee_associatenumber, 
                rssimyaccount_members.phone AS employee_phone,
-               rssimyaccount_members.filterstatus
+               rssimyaccount_members.filterstatus,
+               loc_base.name AS basebranch_name,
+               loc_dep.name  AS depb_name
         FROM rssimyaccount_members
+        LEFT JOIN office_locations loc_base ON loc_base.id = rssimyaccount_members.basebranch
+        LEFT JOIN office_locations loc_dep  ON loc_dep.id  = rssimyaccount_members.depb
         LEFT JOIN (
             SELECT applicantid, COALESCE(SUM(CASE WHEN typeofleave='Sick Leave' THEN days ELSE 0 END), 0) AS sltd,
                    COALESCE(SUM(CASE WHEN typeofleave='Casual Leave' THEN days ELSE 0 END), 0) AS cltd,
@@ -169,8 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php include 'includes/meta.php' ?>
-  
+  <?php include 'includes/meta.php' ?>
+
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
 
@@ -317,9 +321,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
                                 <p><strong>Association type:</strong> <?php echo $array['engagement'] ?></p>
                               </div>
                               <div class="col-md-4">
-                                <p><strong>Base Branch:</strong> <?php echo $array['basebranch'] ?></p>
-                                <p><strong>Deputed Branch:</strong> <?php echo $array['depb'] ?></p>
-                                <p><strong>Base salary/month:</strong> <?php echo 'INR&nbsp;' . $array['salary'] / 12 ?></p>
+                                <p><strong>Base Branch:</strong> <?php echo $array['basebranch_name'] ?? $array['basebranch'] ?></p>
+                                <p><strong>Deputed Branch:</strong> <?php echo $array['depb_name'] ?? $array['depb'] ?></p>
+                                <p><strong>Base salary/month:</strong> <?php echo 'INR&nbsp;' . $array['salary'] ?></p>
                                 <p><strong>Leave Balance:</strong> <?php echo 'LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?></p>
                               </div>
                               <div class="col-md-4">
