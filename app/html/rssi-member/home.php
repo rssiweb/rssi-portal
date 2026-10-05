@@ -996,14 +996,6 @@ if (!function_exists('makeClickableLinks')) {
             </div>
 
             <div class="mb-3">
-              <label for="event_location" class="form-label required-field">Event Location <span class="text-danger">*</span></label>
-              <select class="form-select" id="event_location" name="event_location" required>
-                <option value="" disabled selected>Loading locations...</option>
-              </select>
-              <div class="form-text">Choose where the event will take place</div>
-            </div>
-
-            <div class="mb-3">
               <label for="event_image" class="form-label">Event Image</label>
               <input type="file" class="form-control" id="event_image" name="event_image" accept="image/*" onchange="compressImageBeforeUpload(this)">
               <div class="form-text">Upload an image for your event (optional)</div>
@@ -1027,36 +1019,6 @@ if (!function_exists('makeClickableLinks')) {
   <!-- Scripts -->
   <script>
     $(document).ready(function() {
-
-      // Populate Event Location dropdown from fetch_locations.php
-      $.ajax({
-        url: 'fetch_locations.php',
-        type: 'GET',
-        dataType: 'json',
-        success: function(locations) {
-          const $sel = $('#event_location');
-          $sel.empty();
-          $sel.append('<option value="" disabled selected>Select location from the list</option>');
-
-          if (Array.isArray(locations) && locations.length > 0) {
-            locations.forEach(function(loc) {
-              // Use id as value, name as visible text
-              $sel.append($('<option>', {
-                value: loc.id,
-                text: loc.name
-              }));
-            });
-          } else {
-            $sel.append('<option value="" disabled>No active locations available</option>');
-          }
-        },
-        error: function(xhr, status, err) {
-          console.error('Failed to load locations:', err);
-          const $sel = $('#event_location');
-          $sel.empty();
-          $sel.append('<option value="" disabled selected>Failed to load locations</option>');
-        }
-      });
 
       // Add red asterisk to required fields
       $('form')
@@ -1165,12 +1127,6 @@ if (!function_exists('makeClickableLinks')) {
       if ($('#event_name').data('select2')) {
         $('#event_name').val(null).trigger('change');
         $('#event_name').trigger('select2:clearing');
-      }
-
-      // 3. Reset #event_location (no re-fetch — options already loaded)
-      const $loc = $('#event_location');
-      if ($loc.length) {
-        $loc.val('');
       }
 
       // 4. Clear Quill editor
@@ -1968,8 +1924,10 @@ if (!function_exists('makeClickableLinks')) {
         allowClear: true,
         width: '100%',
         dropdownParent: $('#editEventModal'),
+        minimumInputLength: 2, // avoid 1-char noise
+        // cache: true,                 // <-- REMOVE this line
         ajax: {
-          url: '/../date_details_api.php',
+          url: 'date_details_api.php',
           dataType: 'json',
           delay: 300,
           data: function(params) {
@@ -1978,26 +1936,14 @@ if (!function_exists('makeClickableLinks')) {
             };
           },
           processResults: function(data) {
-            if (data.results && Array.isArray(data.results)) {
-              return {
-                results: data.results
-              };
-            }
             return {
-              results: []
+              results: data.results || []
             };
-          },
-          cache: true
+          }
+          // no cache: true here
         },
-        minimumInputLength: 1,
         templateResult: formatEventResult,
         templateSelection: formatEventSelection
-      });
-
-      // When event is selected, show details (optional)
-      $('#event_name').on('select2:select', function(e) {
-        var data = e.params.data;
-        displaySelectedEventDetails(data);
       });
 
       // Clear details when event is cleared
@@ -2019,7 +1965,7 @@ if (!function_exists('makeClickableLinks')) {
         '<div>' +
         '<strong>' + escapeHtml(displayText) + '</strong><br>' +
         '<small class="text-muted">' +
-        '<i class="bi bi-geo-alt"></i> ' + escapeHtml(event.location || 'Location TBD') +
+        '<i class="bi bi-geo-alt"></i> ' + escapeHtml(event.location_name || 'Location TBD') +
         '</small>' +
         '</div>'
       );

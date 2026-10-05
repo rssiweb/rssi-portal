@@ -3,9 +3,9 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
-  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-  header("Location: index.php");
-  exit;
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;
 }
 
 validation();
@@ -69,6 +69,7 @@ try {
                 e.event_date,
                 TO_CHAR(e.event_date, 'DD Mon YYYY') as formatted_date,
                 e.location,
+                ol.name AS location_name,
                 COALESCE(et.display_name, 'Other') as event_type,
                 e.applicable_classes,
                 e.is_full_day,
@@ -80,6 +81,7 @@ try {
             FROM internal_events e 
             LEFT JOIN rssimyaccount_members u ON e.created_by = u.associatenumber 
             LEFT JOIN event_types et ON e.event_type = et.id
+            LEFT JOIN office_locations ol ON e.location = ol.id
             WHERE (e.event_name ILIKE \$1 OR CAST(e.id AS TEXT) ILIKE \$1)
               $locationFilter
             ORDER BY e.event_date DESC
@@ -101,6 +103,7 @@ try {
                 'formatted_date' => $row['formatted_date'],
                 'event_type' => $row['event_type'],
                 'location' => $row['location'] ?? 'Not specified',
+                'location_name' => $row['location_name'] ?? 'Not specified',   // <-- NAME now
                 'applicable_classes' => $row['applicable_classes'],
                 'description' => $row['description'],
                 'is_full_day' => $row['is_full_day'] == 't',
@@ -126,6 +129,7 @@ try {
                 'event_date' => $event['event_date'],
                 'formatted_date' => $event['formatted_date'],
                 'location' => $event['location'],
+                'location_name' => $event['location_name'],   // NAME (for display)
                 'event_type' => $event['event_type'],
                 'applicable_classes' => $event['applicable_classes'],
                 'description' => $event['description'],

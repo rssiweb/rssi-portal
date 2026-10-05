@@ -13,41 +13,56 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-?>
-<?php
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Collect and sanitize input data
-    $event_name = htmlspecialchars($_POST['event_name'], ENT_QUOTES, 'UTF-8');
-    // $event_description = htmlspecialchars($_POST['event_description'], ENT_QUOTES, 'UTF-8');
+
+    // ---- 1. Event ID (from Select2) — this is the ONLY trusted link to location ----
+    $event_id = !empty($_POST['event_name']) ? (int)$_POST['event_name'] : null;
+
+    if (!$event_id) {
+        echo "<script>alert('Please select a valid event.');</script>";
+        exit;
+    }
+
+    // ---- 2. Look up location from internal_events SERVER-SIDE (tamper-proof) ----
+    $locRes = pg_query_params(
+        $con,
+        "SELECT location FROM internal_events WHERE id = \$1",
+        [$event_id]
+    );
+
+    if (!$locRes || pg_num_rows($locRes) === 0) {
+        echo "<script>alert('Invalid event selected.');</script>";
+        exit;
+    }
+
+    $event_location = pg_fetch_result($locRes, 0, 'location'); // ID or null
+
+    // ---- 3. Sanitize the rest of the inputs ----
+    $event_name        = htmlspecialchars($_POST['event_name'], ENT_QUOTES, 'UTF-8');
     $event_description = $_POST['event_description'] ?? '';
 
-    // If you want to allow HTML but sanitize it
-    $config = HTMLPurifier_Config::createDefault();
-    $purifier = new HTMLPurifier($config);
+    $config    = HTMLPurifier_Config::createDefault();
+    $purifier  = new HTMLPurifier($config);
     $event_description = $purifier->purify($event_description);
-    $event_date = $_POST['event_date']; // Ensure the format matches your TIMESTAMP requirement
-    $event_location = htmlspecialchars($_POST['event_location'], ENT_QUOTES, 'UTF-8');
-    $created_by = $associatenumber; // Replace this with dynamic user identification logic (e.g., session)
 
-    // Initialize variables for the event image URL and upload status
+    $event_date  = $_POST['event_date'];
+    $created_by  = $associatenumber;
+
+    // ---- 4. Optional image upload ----
     $event_image_url = null;
 
-    // Handle file upload for the event image
     if (!empty($_FILES['event_image']['name'])) {
         $event_image = $_FILES['event_image'];
 
-        // Check if file size is less than 300 KB
         if ($event_image['size'] > 300 * 1024) {
             echo "<script>alert('Image size should not exceed 300 KB.');</script>";
             exit;
         }
 
-        // Resize image to 800x400 (client-side)
-        // This requires JavaScript and client-side logic (covered below in HTML)
+        $filename          = $event_name . "_image_" . time();
+        $parent_folder_id  = '1UXkDUMIVcr_XxNKimhFQTNuhlu_ek_AE';
 
-        $filename = $event_name . "_image_" . time(); // Unique filename
-        $parent_folder_id = '1UXkDUMIVcr_XxNKimhFQTNuhlu_ek_AE'; // Replace with your Google Drive folder ID
         try {
             $event_image_url = uploadeToDrive($event_image, $parent_folder_id, $filename);
         } catch (Exception $e) {
@@ -56,33 +71,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // SQL query for insertion
-    $sql = "INSERT INTO events (event_name, event_description, event_date, event_location, event_image_url, created_by)
+    // ---- 5. Insert ----
+    $sql = "INSERT INTO events 
+                (event_name, event_description, event_date, event_location, event_image_url, created_by)
             VALUES ($1, $2, $3, $4, $5, $6)";
 
-    // Use pg_query_params for parameterized query to prevent SQL injection
-    $result = pg_query_params($con, $sql, array($event_name, $event_description, $event_date, $event_location, $event_image_url, $created_by));
+    $result = pg_query_params($con, $sql, array(
+        $event_name,
+        $event_description,
+        $event_date,
+        $event_location,
+        $event_image_url,
+        $created_by
+    ));
 
     if ($result) {
-        // Send email notification if the query is successful
         sendEmail("new_post", [
             "posttitle" => $event_name,
-            "author" => $created_by,
-            "now" => date("d/m/Y g:i a"),
+            "author"    => $created_by,
+            "now"       => date("d/m/Y g:i a"),
         ], 'info@rssi.in');
+
         echo "<script>
-    alert('Post successfully created. The post is currently under review and will be published on the home page after approval.');
-    
-    if (window.history.replaceState) {
-        // Update the URL without causing a page reload or resubmission
-        window.history.replaceState(null, null, window.location.href);
-    }
-    
-    // Redirect the user to the home page
-    window.location.href = 'home.php';
-</script>";
+            alert('Post successfully created. The post is currently under review and will be published on the home page after approval.');
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+            window.location.href = 'home.php';
+        </script>";
     } else {
         echo "<script>alert('Failed to create event.');</script>";
     }
 }
-?>
