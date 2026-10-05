@@ -26,11 +26,14 @@ if (!empty($_GET['start_date']) && !empty($_GET['end_date']) && $_GET['start_dat
 $query = "
     SELECT 
         events.*, 
+        ie.event_name AS internal_event_name,
         creator.fullname  AS created_by_name, 
         reviewer.fullname AS reviewed_by_name,
         ol.name           AS event_location_name,
         ol.id             AS event_location_id
     FROM events
+    LEFT JOIN internal_events AS ie
+        ON ie.id = events.event_name::integer
     LEFT JOIN rssimyaccount_members AS creator 
         ON events.created_by = creator.associatenumber
     LEFT JOIN rssimyaccount_members AS reviewer 
@@ -124,11 +127,12 @@ if (!$result) {
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <?php $serial = 1; ?>
                                         <?php
                                         while ($row = pg_fetch_assoc($result)): ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($row['event_id']) ?></td>
-                                                <td><?= htmlspecialchars($row['event_name']) ?></td>
+                                                <td><?= $serial++ ?></td>
+                                                <td><?= htmlspecialchars($row['internal_event_name']) ?></td>
                                                 <td><?= htmlspecialchars((new DateTime($row['event_date']))->format('d/m/Y')); ?></td>
 
                                                 <td>
