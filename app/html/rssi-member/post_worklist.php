@@ -33,7 +33,7 @@ $query = "
         ol.id             AS event_location_id
     FROM events
     LEFT JOIN internal_events AS ie
-        ON ie.id = events.event_name::integer
+        ON ie.id = events.event_name_id::integer
     LEFT JOIN rssimyaccount_members AS creator 
         ON events.created_by = creator.associatenumber
     LEFT JOIN rssimyaccount_members AS reviewer 
@@ -103,13 +103,25 @@ if (!$result) {
                         <div class="card-body">
                             <br>
                             <form method="GET" action="#">
-                                <label for="start_date">Start Date:</label>
-                                <input type="date" id="start_date" name="start_date" value="<?php echo isset($_GET['start_date']) ? htmlspecialchars($_GET['start_date']) : ''; ?>">
+                                <div class="row g-3 align-items-end mb-3">
+                                    <div class="col-md-2">
+                                        <label for="start_date" class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" id="start_date" name="start_date"
+                                            value="<?php echo htmlspecialchars($_GET['start_date'] ?? ''); ?>">
+                                    </div>
 
-                                <label for="end_date">End Date:</label>
-                                <input type="date" id="end_date" name="end_date" value="<?php echo isset($_GET['end_date']) ? htmlspecialchars($_GET['end_date']) : ''; ?>">
+                                    <div class="col-md-2">
+                                        <label for="end_date" class="form-label">End Date</label>
+                                        <input type="date" class="form-control" id="end_date" name="end_date"
+                                            value="<?php echo htmlspecialchars($_GET['end_date'] ?? ''); ?>">
+                                    </div>
 
-                                <button type="submit">Filter</button>
+                                    <div class="col-md-auto">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-funnel"></i> Filter
+                                        </button>
+                                    </div>
+                                </div>
                             </form>
 
                             <div class="table-responsive">
@@ -132,21 +144,24 @@ if (!$result) {
                                         while ($row = pg_fetch_assoc($result)): ?>
                                             <tr>
                                                 <td><?= $serial++ ?></td>
-                                                <td><?= htmlspecialchars($row['internal_event_name']) ?></td>
+                                                <td><?= htmlspecialchars($row['internal_event_name'] ?? '') ?></td>
                                                 <td><?= htmlspecialchars((new DateTime($row['event_date']))->format('d/m/Y')); ?></td>
 
                                                 <td>
+                                                    <?php
+                                                    $desc_plain = trim(strip_tags($row['event_description'] ?? ''));
+                                                    $is_long    = mb_strlen($desc_plain) > 30;
+                                                    ?>
                                                     <div class="short-description text-muted">
-                                                        <?= mb_strimwidth(strip_tags($row['event_description']), 0, 30, '...') ?>
+                                                        <?= htmlspecialchars($is_long ? mb_strimwidth($desc_plain, 0, 30, '...') : $desc_plain) ?>
                                                     </div>
 
-                                                    <div class="full-description d-none">
-                                                        <?= $row['event_description'] ?>
-                                                    </div>
-
-                                                    <button type="button" class="btn btn-link p-0 toggle-description">
-                                                        Show More
-                                                    </button>
+                                                    <?php if ($is_long): ?>
+                                                        <div class="full-description d-none">
+                                                            <?= $row['event_description'] ?>
+                                                        </div>
+                                                        <button type="button" class="btn btn-link p-0 toggle-description">Show More</button>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td><?= htmlspecialchars($row['created_by_name']) ?><br>
                                                     <?= htmlspecialchars((new DateTime($row['created_at']))->format('d/m/Y h:i A')); ?></td>
@@ -213,11 +228,28 @@ if (!$result) {
     </script>
     <script>
         // Toggle description visibility
-        $(document).on('click', '.toggle-description', function() {
-            const row = $(this).closest('tr');
-            row.find('.short-description').toggleClass('d-none');
-            row.find('.full-description').toggleClass('d-none');
-            $(this).text($(this).text() === 'Show More' ? 'Show Less' : 'Show More');
+        $(document).on('click', '.toggle-description', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const $btn = $(this);
+            const $cell = $btn.closest('td');
+            const $short = $cell.find('.short-description');
+            const $full = $cell.find('.full-description');
+
+            const isExpanded = !$full.hasClass('d-none');
+
+            if (isExpanded) {
+                // Collapse
+                $full.addClass('d-none');
+                $short.removeClass('d-none');
+                $btn.text('Show More');
+            } else {
+                // Expand
+                $full.removeClass('d-none');
+                $short.addClass('d-none');
+                $btn.text('Show Less');
+            }
         });
     </script>
     <script>

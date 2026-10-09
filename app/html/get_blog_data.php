@@ -50,7 +50,7 @@ $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 3;
 
 // Fetch events with pagination
 $query_events = "
-    SELECT e.event_name, e.event_id, e.event_description, e.event_date, e.event_location, e.event_image_url, 
+    SELECT e.event_name_id, e.event_id, e.event_description, e.event_date, e.event_location, e.event_image_url, 
            e.created_at, m.fullname, m.photo 
     FROM events e
     JOIN rssimyaccount_members m ON e.created_by = m.associatenumber

@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ---- 5. Insert ----
     $sql = "INSERT INTO events 
-                (event_name, event_description, event_date, event_location, event_image_url, created_by)
+                (event_name_id, event_description, event_date, event_location, event_image_url, created_by)
             VALUES ($1, $2, $3, $4, $5, $6)";
 
     $result = pg_query_params($con, $sql, array(
