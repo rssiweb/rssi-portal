@@ -25,50 +25,29 @@ function build_ref_number($id, $created_at)
     return substr($micro . $rev, 0, 12);
 }
 
-// Accept either a numeric id or a 12-digit ref
-$raw = isset($_GET['ref']) ? trim($_GET['ref']) : (isset($_GET['id']) ? trim($_GET['id']) : '');
+// Accept only a 12-digit ref
+$raw = isset($_GET['ref']) ? trim($_GET['ref']) : '';
 
-if ($raw === '' || !ctype_digit($raw)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid reference']);
+if ($raw === '' || !ctype_digit($raw) || strlen($raw) !== 12) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid reference. Please enter the 12-digit reference number.'
+    ]);
     exit;
 }
 
 // ---------------------------------------------------------------------------
-// Path 1: caller passed a short numeric id (≤ 11 digits) → direct lookup
-// ---------------------------------------------------------------------------
-if (strlen($raw) < 12) {
-    $id = (int)$raw;
-    if ($id <= 0) {
-        echo json_encode(['success' => false, 'message' => 'Invalid reference']);
-        exit;
-    }
-
-    $sql = "SELECT * FROM parent_admissions WHERE id = $1";
-    $res = pg_query_params($con, $sql, [$id]);
-
-    if (!$res) {
-        echo json_encode(['success' => false, 'message' => 'Database error']);
-        exit;
-    }
-
-    $row = pg_fetch_assoc($res);
-    if (!$row) {
-        echo json_encode(['success' => false, 'message' => 'No record found']);
-        exit;
-    }
-
-    $row['ref_number'] = build_ref_number($row['id'], $row['created_at']);
-    echo json_encode(['success' => true, 'data' => $row]);
-    exit;
-}
-
-// ---------------------------------------------------------------------------
-// Path 2: caller passed a 12-digit ref → scan recent rows for a match
+// Scan recent rows to find a match (ref is not reversible by arithmetic)
 // ---------------------------------------------------------------------------
 $res = pg_query(
     $con,
     "SELECT * FROM parent_admissions ORDER BY id DESC LIMIT 10000"
 );
+
+if (!$res) {
+    echo json_encode(['success' => false, 'message' => 'Database error']);
+    exit;
+}
 
 $match = null;
 while ($r = pg_fetch_assoc($res)) {
