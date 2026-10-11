@@ -14,6 +14,28 @@ validation();
 $user_id = $associatenumber;
 $user_role = $role;
 
+/**
+ * Build a 12-digit unpredictable reference number from id + created_at.
+ *
+ * - Last 6 digits of created_at's microseconds → first 6 chars
+ * - Reversed id, padded to 7 digits → next 6 chars
+ * Result: 12 digits, neighbouring ids look completely different.
+ *
+ * Example: id=194, created_at=2025-07-01 15:02:21.310336 → 310336491000
+ */
+function build_ref_number($id, $created_at)
+{
+    // Extract the microseconds part (after the dot), else fall back to zeros
+    $parts = explode('.', (string)$created_at);
+    $micro = isset($parts[1]) ? preg_replace('/\D/', '', $parts[1]) : '';
+    $micro = str_pad(substr($micro, 0, 6), 6, '0', STR_PAD_LEFT);
+
+    // Reverse the id so consecutive ids produce unrelated refs
+    $rev = str_pad(strrev((string)(int)$id), 7, '0', STR_PAD_LEFT);
+
+    return substr($micro . $rev, 0, 12);
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['submit_admission'])) {
@@ -327,6 +349,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
             echo '<div class="d-flex justify-content-between align-items-start">';
             echo '<div>';
             echo '<h5 class="card-title">' . htmlspecialchars($row['name']) . '</h5>';
+            $ref = build_ref_number($row['id'], $row['created_at']);
+            echo '<p class="card-text mb-1"><small class="text-muted">Ref No: <code class="ref-number">' . htmlspecialchars($ref) . '</code></small></p>';
             echo '<p class="card-text mb-1"><small class="text-muted">Mobile: ' . htmlspecialchars($row['mobile']) . '</small></p>';
             if ($row['class_name']) {
                 echo '<p class="card-text mb-1"><small class="text-muted">Class: ' . htmlspecialchars($row['class_name']) . ' (' . htmlspecialchars($row['value']) . ')</small></p>';
@@ -659,6 +683,10 @@ if (isset($_GET['view'])) {
                     <h5>Basic Information</h5>
                     <table class="table table-sm">
                         <tr>
+                            <th width="40%">Ref No</th>
+                            <td><code class="ref-number"><?= htmlspecialchars(build_ref_number($row['id'], $row['created_at'])) ?></code></td>
+                        </tr>
+                        <tr>
                             <th width="40%">Name</th>
                             <td><?= isset($row['name']) ? htmlspecialchars($row['name']) : 'N/A' ?></td>
                         </tr>
@@ -928,6 +956,21 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
         .search-box {
             max-width: 300px;
         }
+
+        .ref-number {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.9em;
+            background: #eef4ff;
+            color: #0d47a1;
+            padding: 1px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px dashed #b6c9ff;
+        }
+
+        .ref-number:hover {
+            background: #dbe7ff;
+        }
     </style>
 </head>
 
@@ -1179,6 +1222,9 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                                                                 <div class="d-flex justify-content-between align-items-start">
                                                                     <div>
                                                                         <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
+                                                                        <p class="card-text mb-1"><small class="text-muted">
+                                                                                Ref No: <code class="ref-number"><?= htmlspecialchars(build_ref_number($row['id'], $row['created_at'])) ?></code>
+                                                                            </small></p>
                                                                         <p class="card-text mb-1"><small class="text-muted">Mobile: <?= htmlspecialchars($row['mobile']) ?></small></p>
                                                                         <?php if ($row['class_name']): ?>
                                                                             <p class="card-text mb-1"><small class="text-muted">Class: <?= htmlspecialchars($row['class_name']) ?> (<?= htmlspecialchars($row['value']) ?>)</small></p>
@@ -1755,6 +1801,19 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                 if (e.target && (e.target.id === 'edit_total_fee' || e.target.id === 'edit_deposited_amount')) {
                     calculateEditDue();
                 }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('ref-number')) return;
+            const ref = e.target.textContent.trim();
+            navigator.clipboard.writeText(ref).then(() => {
+                const prev = e.target.textContent;
+                e.target.textContent = 'Copied!';
+                setTimeout(() => {
+                    e.target.textContent = prev;
+                }, 800);
             });
         });
     </script>
