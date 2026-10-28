@@ -16,6 +16,7 @@ header('Content-Type: application/json');
 $forStockManagement = isset($_GET['for_stock_management']) && $_GET['for_stock_management'] == 'true';
 $addStock           = isset($_GET['add_stock']) && $_GET['add_stock'] == 'true';
 $searchTerm         = isset($_GET['search']) ? trim($_GET['search']) : '';
+$isEmartRequest = isset($_GET['source']) && $_GET['source'] === 'emart';
 
 if ($addStock) {
     $query = "SELECT
@@ -83,6 +84,10 @@ if ($addStock) {
     //     $query .= " AND i.access_scope = 'public'";
     // }
 
+    if ($isEmartRequest) {
+        $query      .= " AND i.access_scope = 'public'";
+    }
+
     if (!empty($searchTerm)) {
         $query .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";
     }
@@ -108,6 +113,10 @@ if (!$forStockManagement && !$addStock) {
     // } else {
     //     $countQuery .= " AND i.access_scope = 'public'";
     // }
+
+    if ($isEmartRequest) {
+        $countQuery .= " AND i.access_scope = 'public'";
+    }
 
     if (!empty($searchTerm)) {
         $countQuery .= " AND (i.item_name ILIKE '%" . pg_escape_string($con, $searchTerm) . "%' OR i.description ILIKE '%" . pg_escape_string($con, $searchTerm) . "%')";

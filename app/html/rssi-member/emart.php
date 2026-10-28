@@ -1245,7 +1245,8 @@ validation();
             return fetch(
                     `search_products.php?page=${page}` +
                     `&search=${encodeURIComponent(searchTerm)}` +
-                    `&itemsPerPage=${itemsPerPage}`
+                    `&itemsPerPage=${itemsPerPage}` +
+                    `&source=emart`
                 )
                 .then(function(response) {
 
