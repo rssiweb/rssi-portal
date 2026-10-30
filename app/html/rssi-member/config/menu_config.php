@@ -948,6 +948,39 @@ class MenuConfig
                 'pages' => [
                     'maintenance_panel.php' => ['title' => 'Maintenance Panel', 'show_in_menu' => true]
                 ]
+            ],
+
+            // ============ LITTLE HAND ============
+            'listingLink' => [
+                'section' => 'Little Hand',
+                'sidebar_id' => 'littlehand',
+                'pages' => [
+                    'listing.php' => ['title' => 'Listing', 'show_in_menu' => true],
+                    'add_products.php' => ['title' => 'Add Products', 'show_in_menu' => false],
+                    'update_listed_product.php' => ['title' => 'Update Listed Product', 'show_in_menu' => false],
+                    'mark_product_sold.php' => ['title' => 'Mark Product Sold', 'show_in_menu' => false],
+                    'bulk_mark_sold.php' => ['title' => 'Bulk Mark Sold', 'show_in_menu' => false]
+                ]
+            ],
+
+            'vendorLink' => [
+                'section' => 'Little Hand',
+                'sidebar_id' => 'littlehand',
+                'pages' => [
+                    'vendors.php' => ['title' => 'Vendor', 'show_in_menu' => true],
+                    'vendors_list.php' => ['title' => 'Vendors List', 'show_in_menu' => false],
+                    'assign_vendor.php' => ['title' => 'Assign Vendor', 'show_in_menu' => false]
+                ]
+            ],
+
+            'listed_productsLink' => [
+                'section' => 'Little Hand',
+                'sidebar_id' => 'littlehand',
+                'pages' => [
+                    'listed_products.php' => ['title' => 'Listed Products', 'show_in_menu' => true],
+                    'fetch_listed_products.php' => ['title' => 'Fetch Listed Products', 'show_in_menu' => false],
+                    'export_listed_products.php' => ['title' => 'Export Listed Products', 'show_in_menu' => false]
+                ]
             ]
         ];
 
