@@ -128,6 +128,21 @@ function renderRemarks($text, $limit = 50)
         . '<span class="remark-full d-none">' . htmlspecialchars($text) . '</span> '
         . '<a href="#" class="toggle-remark small text-decoration-none">Show more</a>';
 }
+
+function maskPhone($phone, $visible = 4)
+{
+    $phone = trim((string)$phone);
+    if ($phone === '') return 'N/A';
+
+    // Keep only digits so spaces, dashes and +91 don't interfere
+    $digits = preg_replace('/\D/', '', $phone);
+
+    if (strlen($digits) <= $visible) {
+        return $digits;
+    }
+
+    return str_repeat('X', strlen($digits) - $visible) . substr($digits, -$visible);
+}
 ?>
 
 <!DOCTYPE html>
@@ -209,7 +224,7 @@ function renderRemarks($text, $limit = 50)
                                 <p><strong>Email:</strong> <?= htmlspecialchars($outRecipient['out_email'] ?? 'N/A') ?></p>
                             </div>
                             <div class="col-md-4">
-                                <p><strong>Phone:</strong> <?= htmlspecialchars($outRecipient['out_phone'] ?? 'N/A') ?></p>
+                                <p><strong>Phone:</strong> <?= htmlspecialchars(maskPhone($outRecipient['out_phone'] ?? '')) ?></p>
                             </div>
                         </div>
                     </div>
