@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include(__DIR__ . "/../image_functions.php");
 
 header('Content-Type: application/json');
 if (!isLoggedIn("aid")) {
@@ -143,7 +144,8 @@ while ($r = pg_fetch_assoc($listRes)) {
         'discount'      => (float) $r['discount'],
         'quantity'      => (int) $r['quantity'],
         'sold'          => (int) $r['qty_sold'],
-        'image_url'     => $r['image_drive_url'],
+        'image_url'   => $r['image_drive_url'],
+        'image_proxy' => !empty($r['image_drive_url']) ? processImageUrl($r['image_drive_url']) : null,
         'notes'         => $r['notes'],
         'listed_by'     => $r['listed_by'],
         'listed_date'   => $r['listed_at'] ? date('Y-m-d', strtotime($r['listed_at'])) : null,

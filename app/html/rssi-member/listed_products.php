@@ -564,9 +564,9 @@ validation();
                 return;
             }
             tbody.innerHTML = rows.map(r => {
-                const img = r.image_url ?
-                    `<img src="${escapeHtml(r.image_url)}" class="thumb" alt=""
-                         onclick="previewImage('${escapeHtml(r.image_url)}')">` :
+                const img = r.image_proxy ?
+                    `<img src="${escapeHtml(r.image_proxy)}" class="thumb" alt="" loading="lazy"
+          onclick="previewImage('${escapeHtml(r.image_proxy)}')">` :
                     '<span class="text-muted">—</span>';
                 const available = Math.max(0, Number(r.quantity || 0) - Number(r.sold || 0));
                 const checked = selected.has(r.id) ? 'checked' : '';
