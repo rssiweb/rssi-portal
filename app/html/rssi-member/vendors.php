@@ -34,6 +34,16 @@ validation();
             color: #991b1b;
         }
 
+        .badge-kyc-ok {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-kyc-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
         .filter-bar {
             background: #f9fafb;
             border-radius: 1rem;
@@ -72,6 +82,39 @@ validation();
             to {
                 transform: rotate(360deg);
             }
+        }
+
+        .form-section-title {
+            font-size: .8rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin: .25rem 0 .75rem;
+        }
+
+        .file-current a {
+            font-size: .8rem;
+        }
+
+        #vendorTabs .nav-link {
+            font-size: .9rem;
+        }
+
+        .view-mode .edit-only,
+        .view-mode input[type=file] {
+            display: none;
+        }
+
+        .view-mode .form-control:disabled,
+        .view-mode .form-select:disabled {
+            background: #f8f9fa;
+            color: #212529;
+            opacity: 1;
+        }
+
+        .view-mode .file-current:empty::after {
+            content: "Not uploaded";
+            font-size: .8rem;
+            color: #6b7280;
         }
 
         @media (max-width:767px) {
@@ -115,7 +158,7 @@ validation();
                             <div class="filter-bar mb-3">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-12 col-md-4">
-                                        <label class="form-label small">Search (name / contact)</label>
+                                        <label class="form-label small">Search (name / contact / phone / city / GSTIN)</label>
                                         <input type="text" class="form-control form-control-sm" id="fSearch" placeholder="Type…">
                                     </div>
                                     <div class="col-6 col-md-3">
@@ -141,9 +184,12 @@ validation();
                                 <table class="table table-hover align-middle">
                                     <thead>
                                         <tr>
-                                            <th style="width:60px;">#</th>
-                                            <th>Name</th>
+                                            <th style="width:50px;">#</th>
+                                            <th>Vendor</th>
                                             <th>Contact</th>
+                                            <th>Location</th>
+                                            <th>GSTIN</th>
+                                            <th>KYC</th>
                                             <th>Status</th>
                                             <th>Created</th>
                                             <th class="text-end">Actions</th>
@@ -161,7 +207,7 @@ validation();
 
     <!-- ============= ADD / EDIT VENDOR MODAL ============= -->
     <div class="modal fade" id="vendorModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="border-radius:1rem;">
                 <div class="modal-header">
                     <h5 class="modal-title" id="vendorModalTitle">
@@ -169,25 +215,173 @@ validation();
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="vendorForm">
+                <form id="vendorForm" enctype="multipart/form-data" novalidate>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="vId">
-                        <div class="mb-3">
-                            <label class="form-label small">Vendor name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="name" id="vName" maxlength="150" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Contact</label>
-                            <input type="text" class="form-control" name="contact" id="vContact" maxlength="100" placeholder="Phone / email / address">
-                        </div>
-                        <div class="form-check form-switch" id="activeRow" style="display:none;">
-                            <input class="form-check-input" type="checkbox" id="vActive" name="active" checked>
-                            <label class="form-check-label small" for="vActive">Active</label>
-                        </div>
+
+                        <ul class="nav nav-tabs mb-3" id="vendorTabs" role="tablist">
+                            <li class="nav-item"><button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabBasic">Business</button></li>
+                            <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tabAddress">Addresses</button></li>
+                            <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tabKyc">ID &amp; documents</button></li>
+                            <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBank">Payment</button></li>
+                        </ul>
+
+                        <fieldset id="vendorFieldset" class="border-0 p-0 m-0" style="min-width:0">
+                            <div class="tab-content">
+                                <!-- Business + contact -->
+                                <div class="tab-pane fade show active" id="tabBasic">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Business / shop name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="name" id="vName" maxlength="150" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Contact person <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="contact_person" maxlength="150" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">What do they supply? <span class="text-danger">*</span></label>
+                                            <select class="form-select" name="vendor_type" id="vendorType" required></select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Business type</label>
+                                            <select class="form-select" name="business_type" id="businessType"></select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Phone <span class="text-danger">*</span></label>
+                                            <input type="tel" class="form-control" name="phone" maxlength="15" placeholder="10-digit mobile" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Alternate phone</label>
+                                            <input type="tel" class="form-control" name="alt_phone" maxlength="15">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label small">Email</label>
+                                            <input type="email" class="form-control" name="email" maxlength="150">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">GSTIN</label>
+                                            <input type="text" class="form-control text-uppercase" name="gstin" maxlength="15" placeholder="If registered">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">PAN</label>
+                                            <input type="text" class="form-control text-uppercase" name="pan" maxlength="10">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Payment terms</label>
+                                            <select class="form-select" name="payment_terms" id="payTerms"></select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small">Notes</label>
+                                            <textarea class="form-control" name="notes" rows="2" maxlength="2000" placeholder="Items supplied, shop timings, delivery instructions…"></textarea>
+                                        </div>
+                                        <div class="col-12" id="activeRow" style="display:none;">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="vActive" name="active" checked>
+                                                <label class="form-check-label small" for="vActive">Active</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Addresses -->
+                                <div class="tab-pane fade" id="tabAddress">
+                                    <div class="form-section-title">Business address (where goods are delivered) <span class="text-danger">*</span></div>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <textarea class="form-control" name="biz_address" rows="2" maxlength="500" placeholder="Shop no., street, area, landmark" required></textarea>
+                                        </div>
+                                        <div class="col-md-5"><input type="text" class="form-control" name="biz_city" maxlength="80" placeholder="City" required></div>
+                                        <div class="col-md-4"><select class="form-select state-select" name="biz_state" required></select></div>
+                                        <div class="col-md-3"><input type="text" class="form-control" name="biz_pincode" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="Pincode" required></div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="form-section-title mb-2">Residential address</div>
+                                        <div class="form-check small">
+                                            <input class="form-check-input" type="checkbox" id="sameAddr">
+                                            <label class="form-check-label" for="sameAddr">Same as business address</label>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <textarea class="form-control" name="res_address" rows="2" maxlength="500"></textarea>
+                                        </div>
+                                        <div class="col-md-5"><input type="text" class="form-control" name="res_city" maxlength="80" placeholder="City"></div>
+                                        <div class="col-md-4"><select class="form-select state-select" name="res_state"></select></div>
+                                        <div class="col-md-3"><input type="text" class="form-control" name="res_pincode" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="Pincode"></div>
+                                    </div>
+                                </div>
+
+                                <!-- ID & documents -->
+                                <div class="tab-pane fade" id="tabKyc">
+                                    <div class="row g-3">
+                                        <div class="col-md-5">
+                                            <label class="form-label small">ID proof type</label>
+                                            <select class="form-select" name="id_proof_type" id="idType"></select>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <label class="form-label small">ID proof number</label>
+                                            <input type="text" class="form-control" name="id_proof_number" maxlength="30">
+
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">ID proof file (JPG, PNG, PDF)</label>
+                                            <input type="file" class="form-control" name="id_proof" accept=".jpg,.jpeg,.png,.webp,.pdf" onchange="compressImageBeforeUpload(this)">
+                                            <div class="file-current" data-f="id_proof"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">GST / registration certificate</label>
+                                            <input type="file" class="form-control" name="business_doc" accept=".jpg,.jpeg,.png,.webp,.pdf" onchange="compressImageBeforeUpload(this)">
+                                            <div class="file-current" data-f="business_doc"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Owner / contact person photo</label>
+                                            <input type="file" class="form-control" name="photo" accept=".jpg,.jpeg,.png,.webp" onchange="compressImageBeforeUpload(this)">
+                                            <div class="file-current" data-f="photo"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Shop photo</label>
+                                            <input type="file" class="form-control" name="shop_photo" accept=".jpg,.jpeg,.png,.webp" onchange="compressImageBeforeUpload(this)">
+                                            <div class="file-current" data-f="shop_photo"></div>
+                                        </div>
+                                        <div class="col-12 form-text edit-only">Max 5 MB per file. Uploading a new file replaces the old one.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment -->
+                                <div class="tab-pane fade" id="tabBank">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Account holder name</label>
+                                            <input type="text" class="form-control" name="bank_account_name" maxlength="150">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Bank name</label>
+                                            <input type="text" class="form-control" name="bank_name" maxlength="100">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Account number</label>
+                                            <input type="text" class="form-control" name="bank_account_no" maxlength="18" inputmode="numeric">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">IFSC</label>
+                                            <input type="text" class="form-control text-uppercase" name="bank_ifsc" maxlength="11">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">UPI ID</label>
+                                            <input type="text" class="form-control" name="upi_id" maxlength="80" placeholder="name@bank">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="vSubmitBtn">Save</button>
+                        <button type="button" class="btn btn-outline-danger me-auto d-none" id="vToggleBtn"></button>
+                        <button type="button" class="btn btn-secondary" id="vCancelBtn" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-outline-primary d-none" id="vEditBtn"><i class="bi bi-pencil me-1"></i>Edit vendor</button>
+                        <button type="submit" class="btn btn-primary" id="vSubmitBtn">Save vendor</button>
                     </div>
                 </form>
             </div>
@@ -202,9 +396,28 @@ validation();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../assets_new/js/main.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
 
     <script>
         let vendors = [];
+
+        const VENDOR_TYPES = ['Stationery', 'Books', 'Uniform / Clothing', 'Electronics', 'Furniture', 'Food / Catering', 'Printing', 'Services', 'Other'];
+        const BUSINESS_TYPES = ['Proprietorship', 'Partnership', 'LLP', 'Private Limited', 'Individual / Unregistered', 'Other'];
+        const ID_TYPES = ['Aadhaar', 'PAN', 'Voter ID', 'Driving Licence', 'Passport'];
+        const PAY_TERMS = ['Advance', 'Cash on delivery', 'Net 15', 'Net 30'];
+        const STATES = ['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh',
+            'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand',
+            'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+            'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+        ];
+
+        // Every text/select field in the form, matching the DB column names
+        const FORM_FIELDS = ['name', 'contact_person', 'vendor_type', 'business_type', 'phone', 'alt_phone', 'email', 'gstin', 'pan',
+            'payment_terms', 'notes', 'res_address', 'res_city', 'res_state', 'res_pincode', 'biz_address', 'biz_city', 'biz_state',
+            'biz_pincode', 'id_proof_type', 'id_proof_number', 'bank_account_name', 'bank_name', 'bank_account_no', 'bank_ifsc', 'upi_id'
+        ];
+
+        const form = document.getElementById('vendorForm');
 
         function escapeHtml(s) {
             return String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -239,6 +452,18 @@ validation();
             };
         }
 
+        function fillSelect(sel, items, placeholder) {
+            sel.innerHTML = `<option value="">${placeholder}</option>` +
+                items.map(i => `<option value="${escapeHtml(i)}">${escapeHtml(i)}</option>`).join('');
+        }
+
+        fillSelect(document.getElementById('vendorType'), VENDOR_TYPES, 'Select…');
+        fillSelect(document.getElementById('businessType'), BUSINESS_TYPES, 'Select…');
+        fillSelect(document.getElementById('idType'), ID_TYPES, 'Select…');
+        fillSelect(document.getElementById('payTerms'), PAY_TERMS, 'Select…');
+        document.querySelectorAll('.state-select').forEach(s => fillSelect(s, STATES, 'State'));
+
+        /* ---------- list ---------- */
         function loadVendors() {
             const q = document.getElementById('fSearch').value.trim();
             const active = document.getElementById('fActive').value;
@@ -248,7 +473,7 @@ validation();
                 _t: Date.now()
             });
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">' +
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">' +
                 '<div class="spinner-border spinner-border-sm me-2"></div>Loading…</td></tr>';
 
             fetch('fetch_vendors.php?' + params.toString())
@@ -260,7 +485,7 @@ validation();
                     document.getElementById('rowCountInfo').textContent = `${vendors.length} vendor(s)`;
                 })
                 .catch(err => {
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-4">
                         <i class="bi bi-exclamation-triangle me-2"></i>${escapeHtml(err.message)}</td></tr>`;
                 });
         }
@@ -268,29 +493,39 @@ validation();
         function renderTable(rows) {
             const tbody = document.getElementById('tableBody');
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">' +
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">' +
                     '<i class="bi bi-inbox me-2"></i>No vendors found</td></tr>';
                 return;
             }
+            const dash = '<span class="text-muted">—</span>';
             tbody.innerHTML = rows.map((v, i) => {
                 const badge = v.active ?
                     '<span class="badge badge-active">Active</span>' :
                     '<span class="badge badge-inactive">Inactive</span>';
+                const kyc = v.kyc_complete ?
+                    '<span class="badge badge-kyc-ok">Complete</span>' :
+                    '<span class="badge badge-kyc-pending">Pending</span>';
+                const loc = [v.biz_city, v.biz_state].filter(Boolean).join(', ');
                 return `<tr>
                     <td class="text-muted small">${i + 1}</td>
-                    <td><div class="fw-semibold">${escapeHtml(v.name)}</div></td>
-                    <td class="small">${v.contact ? escapeHtml(v.contact) : '<span class="text-muted">—</span>'}</td>
+                    <td>
+                        <a href="#" class="fw-semibold text-decoration-none" onclick="openVendor(${v.id}, 'view'); return false;">${escapeHtml(v.name)}</a>
+                        <div class="small text-muted">${escapeHtml(v.vendor_type || '')}${v.business_type ? ' · ' + escapeHtml(v.business_type) : ''}</div>
+                    </td>
+                    <td class="small">
+                        <div>${escapeHtml(v.contact_person || '')}</div>
+                        <div class="text-muted">${v.phone ? escapeHtml(v.phone) : ''}</div>
+                        <div class="text-muted">${v.email ? escapeHtml(v.email) : ''}</div>
+                    </td>
+                    <td class="small">${loc ? escapeHtml(loc) : dash}</td>
+                    <td class="small text-nowrap">${v.gstin ? escapeHtml(v.gstin) : dash}</td>
+                    <td>${kyc}</td>
                     <td>${badge}</td>
                     <td class="small text-nowrap">${fmtDate(v.created_date)}</td>
                     <td class="text-end text-nowrap">
-                        <button class="btn btn-sm btn-outline-primary rounded-pill me-1"
-                                onclick="openEdit(${v.id})" title="Edit">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm ${v.active ? 'btn-outline-danger' : 'btn-outline-success'} rounded-pill"
-                                onclick="toggleActive(${v.id}, ${v.active ? 'true' : 'false'})"
-                                title="${v.active ? 'Deactivate' : 'Activate'}">
-                            <i class="bi ${v.active ? 'bi-toggle-on' : 'bi-toggle-off'}"></i>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill"
+                                onclick="openVendor(${v.id}, 'view')" title="Open vendor details">
+                            <i class="bi bi-eye me-1"></i>View / Edit
                         </button>
                     </td>
                 </tr>`;
@@ -300,36 +535,117 @@ validation();
         /* ---------- modal ---------- */
         const vendorModal = new bootstrap.Modal(document.getElementById('vendorModal'));
 
+        function showFirstTab() {
+            bootstrap.Tab.getOrCreateInstance(document.querySelector('#vendorTabs button')).show();
+        }
+
+        function setCurrentFiles(files) {
+            document.querySelectorAll('.file-current').forEach(el => {
+                const url = files && files[el.dataset.f];
+                el.innerHTML = url ?
+                    `<a href="${escapeHtml(url)}" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> View current file</a>` :
+                    '';
+            });
+        }
+
+        /* mode: 'view' = read-only (default way to look at a vendor), 'edit' = editable */
+        function setMode(mode) {
+            const isView = mode === 'view';
+            const hasId = !!document.getElementById('vId').value;
+            form.classList.toggle('view-mode', isView);
+            document.getElementById('vendorFieldset').disabled = isView;
+            document.getElementById('vSubmitBtn').classList.toggle('d-none', isView);
+            document.getElementById('vEditBtn').classList.toggle('d-none', !isView);
+            document.getElementById('vCancelBtn').textContent = isView ? 'Close' : 'Cancel';
+
+            const cur = vendors.find(x => x.id === Number(document.getElementById('vId').value));
+            const tBtn = document.getElementById('vToggleBtn');
+            tBtn.classList.toggle('d-none', !(isView && cur));
+            if (cur) {
+                tBtn.className = 'btn me-auto ' + (cur.active ? 'btn-outline-danger' : 'btn-outline-success') +
+                    (isView ? '' : ' d-none');
+                tBtn.innerHTML = cur.active ?
+                    '<i class="bi bi-slash-circle me-1"></i>Deactivate vendor' :
+                    '<i class="bi bi-check-circle me-1"></i>Activate vendor';
+            }
+            document.getElementById('vendorModalTitle').innerHTML = isView ?
+                '<i class="bi bi-eye me-2"></i>Vendor details' :
+                (hasId ? '<i class="bi bi-pencil-square me-2"></i>Edit vendor' :
+                    '<i class="bi bi-person-plus me-2"></i>Add vendor');
+        }
+
         function openAdd() {
-            document.getElementById('vendorModalTitle').innerHTML =
-                '<i class="bi bi-person-plus me-2"></i>Add vendor';
+            form.reset();
             document.getElementById('vId').value = '';
-            document.getElementById('vName').value = '';
-            document.getElementById('vContact').value = '';
             document.getElementById('activeRow').style.display = 'none';
+            setCurrentFiles(null);
+            setMode('edit');
+            showFirstTab();
             vendorModal.show();
         }
 
-        function openEdit(id) {
+        function openVendor(id, mode) {
             const v = vendors.find(x => x.id === id);
             if (!v) return;
-            document.getElementById('vendorModalTitle').innerHTML =
-                '<i class="bi bi-pencil-square me-2"></i>Edit vendor';
+            form.reset();
             document.getElementById('vId').value = v.id;
-            document.getElementById('vName').value = v.name;
-            document.getElementById('vContact').value = v.contact || '';
+            FORM_FIELDS.forEach(f => {
+                form.elements[f].value = v[f] ?? '';
+            });
             document.getElementById('vActive').checked = !!v.active;
             document.getElementById('activeRow').style.display = '';
+            setCurrentFiles(v.files);
+            setMode(mode);
+            showFirstTab();
             vendorModal.show();
         }
+
+        // "Edit vendor" button inside the read-only view
+        document.getElementById('vEditBtn').addEventListener('click', () => setMode('edit'));
+
+        // Activate / deactivate from inside the details modal (still asks to confirm)
+        document.getElementById('vToggleBtn').addEventListener('click', () => {
+            const v = vendors.find(x => x.id === Number(document.getElementById('vId').value));
+            if (v) toggleActive(v.id, v.active);
+        });
 
         document.getElementById('addVendorBtn').addEventListener('click', openAdd);
 
-        document.getElementById('vendorForm').addEventListener('submit', function(e) {
+        /* "Same as business address" copies business -> residential */
+        const sameBox = document.getElementById('sameAddr');
+        const ADDR_PAIRS = [
+            ['biz_address', 'res_address'],
+            ['biz_city', 'res_city'],
+            ['biz_state', 'res_state'],
+            ['biz_pincode', 'res_pincode']
+        ];
+
+        function syncAddress() {
+            if (!sameBox.checked) return;
+            ADDR_PAIRS.forEach(([from, to]) => {
+                form.elements[to].value = form.elements[from].value;
+            });
+        }
+        sameBox.addEventListener('change', syncAddress);
+        ADDR_PAIRS.forEach(([from]) => form.elements[from].addEventListener('input', syncAddress));
+
+        /* ---------- save ---------- */
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
+
+            // Required/pattern checks run across all tabs; jump to the tab with the first problem.
+            const bad = form.querySelector('input:invalid, select:invalid, textarea:invalid');
+            if (bad) {
+                const pane = bad.closest('.tab-pane');
+                const trigger = document.querySelector(`#vendorTabs [data-bs-target="#${pane.id}"]`);
+                bootstrap.Tab.getOrCreateInstance(trigger).show();
+                setTimeout(() => bad.reportValidity(), 200);
+                return;
+            }
+
             const btn = document.getElementById('vSubmitBtn');
             const done = setLoading(btn, 'Saving…');
-            const fd = new FormData(this);
+            const fd = new FormData(form);
             // Unchecked switch doesn't submit; force an explicit value.
             fd.set('active', document.getElementById('vActive').checked ? '1' : '0');
 
@@ -344,7 +660,7 @@ validation();
                         vendorModal.hide();
                         Swal.fire({
                             icon: 'success',
-                            title: 'Saved',
+                            title: 'Vendor saved',
                             timer: 1000,
                             showConfirmButton: false
                         });
@@ -352,7 +668,7 @@ validation();
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
+                            title: 'Could not save',
                             text: res.message || 'Failed'
                         });
                     }
@@ -381,10 +697,10 @@ validation();
                 confirmButtonText: isActive ? 'Deactivate' : 'Activate'
             }).then(r => {
                 if (!r.isConfirmed) return;
+                // Only the status is sent, so other vendor details are never overwritten.
                 const fd = new FormData();
+                fd.set('action', 'toggle');
                 fd.set('id', v.id);
-                fd.set('name', v.name);
-                fd.set('contact', v.contact || '');
                 fd.set('active', isActive ? '0' : '1');
                 fetch('save_vendor.php', {
                         method: 'POST',
@@ -393,6 +709,7 @@ validation();
                     .then(r2 => r2.json())
                     .then(res => {
                         if (res.status === 'success') {
+                            vendorModal.hide();
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Updated',
