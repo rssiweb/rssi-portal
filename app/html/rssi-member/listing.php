@@ -409,6 +409,8 @@ validation();
 
         function openScanner(row) {
             scanRow = row;
+            getAudioCtx(); // unlock audio on user gesture
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             scanModal.show();
         }
 
@@ -485,10 +487,76 @@ validation();
             scanner = null;
         }
 
+        /* ---------- beep feedback ---------- */
+        let audioCtx = null;
+
+        function getAudioCtx() {
+            if (!audioCtx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) audioCtx = new AC();
+            }
+            return audioCtx;
+        }
+
+        // type: 'ok' (high short beep) or 'error' (low double buzz)
+        function beep(type = 'ok') {
+            const ctx = getAudioCtx();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+
+            const tones = type === 'ok' ? [{
+                f: 1800,
+                t: 0,
+                d: 0.12
+            }] : [{
+                f: 300,
+                t: 0,
+                d: 0.15
+            }, {
+                f: 300,
+                t: 0.2,
+                d: 0.15
+            }];
+
+            tones.forEach(({
+                f,
+                t,
+                d
+            }) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = f;
+                gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+                gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + d);
+                osc.connect(gain).connect(ctx.destination);
+                osc.start(ctx.currentTime + t);
+                osc.stop(ctx.currentTime + t + d + 0.02);
+            });
+        }
+
         function onScanSuccess(raw) {
             if (scanBusy || !scanRow) return;
             const code = String(raw).trim();
             if (!code) return;
+
+            if (serialExists(code, scanRow)) {
+                if (!scanBusy) {
+                    beep('error');
+                    scanBusy = true;
+                    setTimeout(() => {
+                        scanBusy = false;
+                    }, 1200); // avoid buzzing every frame
+                }
+                scanMsg.className = 'small text-danger mt-2 text-center';
+                scanMsg.textContent = `"${code}" is already in another row`;
+                return;
+            }
+
+            scanBusy = true;
+            beep('ok');
+            if (navigator.vibrate) navigator.vibrate(100);
 
             // Duplicate in another row? warn and keep scanning
             if (serialExists(code, scanRow)) {

@@ -1008,7 +1008,11 @@ validation();
         let scanner = null;
         let scanDone = false;
 
-        document.getElementById('scanBtn').addEventListener('click', () => scanModal.show());
+        document.getElementById('scanBtn').addEventListener('click', () => {
+            getAudioCtx(); // create during the tap
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            scanModal.show();
+        });
 
         scanModalEl.addEventListener('shown.bs.modal', async () => {
             scanDone = false;
@@ -1059,13 +1063,42 @@ validation();
             scanner = null;
         }
 
+        /* ---------- beep feedback ---------- */
+        let audioCtx = null;
+
+        function getAudioCtx() {
+            if (!audioCtx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) audioCtx = new AC();
+            }
+            return audioCtx;
+        }
+
+        function beep() {
+            const ctx = getAudioCtx();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.value = 1800;
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.14);
+        }
+
         function onScanSuccess(code) {
-            if (scanDone) return; // ignore repeat reads
+            if (scanDone) return;
             scanDone = true;
+            beep();
             if (navigator.vibrate) navigator.vibrate(100);
 
-            document.getElementById('fSearch').value = code;
-            scanModal.hide(); // camera stops in 'hidden.bs.modal'
+            document.getElementById('fSearch').value = String(code).trim();
+            scanModal.hide();
             state.page = 1;
             loadProducts();
         }
