@@ -203,8 +203,15 @@ validation();
             </div>
             <div class="col-lg-1 col-6">
                 <label class="form-label d-lg-none">Image</label>
-                <input type="file" class="form-control form-control-sm"
+                <input type="file" class="form-control form-control-sm img-main"
                     name="rows[__idx__][image]" accept="image/*">
+
+                <!-- mobile only: opens the camera directly -->
+                <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-1 cam-btn d-lg-none">
+                    <i class="bi bi-camera-fill"></i> Camera
+                </button>
+                <!-- helper input, no name, so it is never submitted -->
+                <input type="file" class="d-none img-cam" accept="image/*" capture="environment">
             </div>
             <div class="col-lg-2 col-12">
                 <div class="d-flex justify-content-end gap-1">
@@ -271,6 +278,19 @@ validation();
             }
             // Camera scan button
             row.querySelector('.scan-row-btn').addEventListener('click', () => openScanner(row));
+            // ===== ADD THE NEW CODE HERE =====
+            // Camera button for the image field
+            const imgMain = row.querySelector('.img-main');
+            const imgCam = row.querySelector('.img-cam');
+            row.querySelector('.cam-btn').addEventListener('click', () => imgCam.click());
+            imgCam.addEventListener('change', () => {
+                if (!imgCam.files.length) return;
+                const dt = new DataTransfer();
+                dt.items.add(imgCam.files[0]);
+                imgMain.files = dt.files; // photo goes into the field that is submitted
+                imgCam.value = '';
+            });
+            // ===== END =====
             bindRowEvents(row);
             document.getElementById('txnRows').appendChild(row);
             updateRemoveButtons();
