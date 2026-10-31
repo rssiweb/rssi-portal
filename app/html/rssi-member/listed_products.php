@@ -149,7 +149,12 @@ validation();
                                     </div>
                                     <div class="col-12 col-md-6">
                                         <label class="form-label small">Search (serial / item)</label>
-                                        <input type="text" class="form-control form-control-sm" id="fSearch" placeholder="Scan or type…">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" id="fSearch" placeholder="Scan or type…">
+                                            <button class="btn btn-outline-secondary" type="button" id="scanBtn" title="Scan barcode">
+                                                <i class="bi bi-upc-scan"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="col-12 col-md-6 d-flex justify-content-md-end gap-2">
                                         <button class="btn btn-sm btn-outline-secondary rounded-pill" id="clearBtn">
@@ -360,6 +365,22 @@ validation();
         </div>
     </div>
 
+    <!-- ============= SCAN MODAL ============= -->
+    <div class="modal fade" id="scanModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:1rem;">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upc-scan me-2"></i>Scan barcode</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="scanReader" style="width:100%;"></div>
+                    <div class="small text-muted mt-2 text-center" id="scanMsg">Point the camera at the barcode</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
         <i class="bi bi-arrow-up-short"></i>
     </a>
@@ -369,6 +390,7 @@ validation();
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../assets_new/js/main.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <script>
         const state = {
@@ -978,6 +1000,75 @@ validation();
             });
             window.location = 'export_listed_products.php?' + params.toString();
         });
+
+        /* ---------- barcode scanner ---------- */
+        const scanModalEl = document.getElementById('scanModal');
+        const scanModal = new bootstrap.Modal(scanModalEl);
+        const scanMsg = document.getElementById('scanMsg');
+        let scanner = null;
+        let scanDone = false;
+
+        document.getElementById('scanBtn').addEventListener('click', () => scanModal.show());
+
+        scanModalEl.addEventListener('shown.bs.modal', async () => {
+            scanDone = false;
+            scanMsg.textContent = 'Starting camera…';
+            scanner = new Html5Qrcode('scanReader', {
+                verbose: false,
+                useBarCodeDetectorIfSupported: true,
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ]
+            });
+            try {
+                await scanner.start({
+                        facingMode: 'environment'
+                    }, {
+                        fps: 10,
+                        qrbox: {
+                            width: 260,
+                            height: 140
+                        }
+                    },
+                    onScanSuccess,
+                    () => {} // ignore per-frame "not found" errors
+                );
+                scanMsg.textContent = 'Point the camera at the barcode';
+            } catch (err) {
+                scanMsg.textContent = 'Camera error: ' + (err?.message || err) +
+                    '. Allow camera permission and make sure the site is on HTTPS.';
+            }
+        });
+
+        scanModalEl.addEventListener('hidden.bs.modal', stopScanner);
+
+        async function stopScanner() {
+            if (!scanner) return;
+            try {
+                await scanner.stop();
+            } catch (e) {}
+            try {
+                scanner.clear();
+            } catch (e) {}
+            scanner = null;
+        }
+
+        function onScanSuccess(code) {
+            if (scanDone) return; // ignore repeat reads
+            scanDone = true;
+            if (navigator.vibrate) navigator.vibrate(100);
+
+            document.getElementById('fSearch').value = code;
+            scanModal.hide(); // camera stops in 'hidden.bs.modal'
+            state.page = 1;
+            loadProducts();
+        }
 
         /* ---------- init ---------- */
         loadProducts();
