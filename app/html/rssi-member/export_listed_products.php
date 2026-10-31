@@ -57,7 +57,7 @@ $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 
 $sql = "SELECT pl.serial_number, pl.item_name, pl.category, pl.metal, pl.purity,
                pl.cost_price, pl.min_sell_price, pl.selling_price, pl.discount,
-               pl.quantity, pl.qty_sold, v.name AS vendor, pl.status, pl.listed_at
+               pl.quantity, pl.qty_sold, pl.sold_at, v.name AS vendor, pl.status, pl.listed_at
           FROM product_listings pl
      LEFT JOIN vendors v ON v.id = pl.current_vendor_id
           $whereSql

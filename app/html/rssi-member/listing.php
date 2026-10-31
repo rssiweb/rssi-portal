@@ -204,7 +204,7 @@ validation();
             <div class="col-lg-1 col-6">
                 <label class="form-label d-lg-none">Image</label>
                 <input type="file" class="form-control form-control-sm img-main"
-                    name="rows[__idx__][image]" accept="image/*">
+                    name="rows[__idx__][image]" accept="image/*" onchange="compressImageBeforeUpload(this)">
 
                 <!-- mobile only: opens the camera directly -->
                 <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-1 cam-btn d-lg-none">
@@ -261,6 +261,7 @@ validation();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
+    <script src="../assets_new/js/image-compressor-100kb.js"></script>
 
     <script>
         let rowCounter = 0;

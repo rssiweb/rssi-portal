@@ -1,81 +1,66 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
-$studentId = $_GET['student_id'] ?? '';
-$monthYear = $_GET['month_year'] ?? date('Y-m'); // NEW parameter
+$studentId = trim($_GET['student_id'] ?? '');
+$monthYear = $_GET['month_year'] ?? date('Y-m');
 
-// Extract month and year from month_year parameter
-if (!empty($monthYear)) {
-    $date = DateTime::createFromFormat('Y-m', $monthYear);
-    if ($date !== false) {
-        $month = $date->format('F'); // Full month name (e.g., "November")
-        $year = $date->format('Y');  // Year (e.g., "2025")
-        $monthNumber = $date->format('m'); // Month number (e.g., "11")
-    } else {
-        // Fallback to current month
-        $month = date('F');
-        $year = date('Y');
-        $monthNumber = date('m');
-    }
-} else {
-    // Fallback to current month
-    $month = date('F');
-    $year = date('Y');
-    $monthNumber = date('m');
-}
-
-if (empty($studentId)) {
+if ($studentId === '') {
     die("Student ID is required");
 }
 
-// Get payment history
-$paymentQuery = "SELECT p.id, p.academic_year, p.month, 
-                 COALESCE(fc.category_name, 'Previous Dues') as category_name,
-                 p.amount, p.payment_type, p.transaction_id, 
+// '!' resets unspecified fields, so the day is 1 (no more Sep 31 -> Oct 1)
+$date = DateTime::createFromFormat('!Y-m', $monthYear) ?: new DateTime('first day of this month');
+
+$month           = $date->format('F');      // September
+$year            = $date->format('Y');      // 2026
+$firstDayOfMonth = $date->format('Y-m-01'); // 2026-09-01
+$lastDayOfMonth  = $date->format('Y-m-t');  // 2026-09-30
+
+// ---------- Payments ----------
+$paymentQuery = "SELECT p.id, p.academic_year, p.month,
+                 COALESCE(fc.category_name, 'Previous Dues') AS category_name,
+                 p.amount, p.payment_type, p.transaction_id,
                  p.collection_date, p.notes,
-                 m.fullname as collected_by
+                 m.fullname AS collected_by
           FROM fee_payments p
           LEFT JOIN fee_categories fc ON p.category_id = fc.id
           LEFT JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
-          WHERE p.student_id = '$studentId'";
+          WHERE p.student_id = $1 AND p.month = $2 AND p.academic_year = $3
+          ORDER BY p.collection_date DESC, p.id DESC";
 
-if (!empty($month) && !empty($year)) {
-    $paymentQuery .= " AND p.month = '$month' AND p.academic_year = '$year'";
-}
-$paymentQuery .= " ORDER BY p.collection_date DESC, p.id DESC";
+$payments = pg_fetch_all(pg_query_params($con, $paymentQuery, [$studentId, $month, $year])) ?: [];
 
-// Get concession details
-// Get concession details - FIXED VERSION
+// ---------- Concessions ----------
 $concessionQuery = "SELECT sc.*, fc.category_name,
-                   m.fullname as created_by_name
-            FROM student_concessions sc
-            LEFT JOIN fee_categories fc ON sc.category_id = fc.id
-            LEFT JOIN rssimyaccount_members m ON sc.created_by = m.associatenumber
-            WHERE sc.student_id = '$studentId'";
+                    m.fullname AS created_by_name
+             FROM student_concessions sc
+             LEFT JOIN fee_categories fc ON sc.category_id = fc.id
+             LEFT JOIN rssimyaccount_members m ON sc.created_by = m.associatenumber
+             WHERE sc.student_id = $1
+               AND (
+                    -- concession period overlaps this month
+                    (sc.effective_from <= $3::date
+                     AND (sc.effective_until IS NULL OR sc.effective_until >= $2::date))
+                    OR
+                    -- or it starts inside this month
+                    (sc.effective_from >= $2::date AND sc.effective_from <= $3::date)
+               )
+             ORDER BY sc.effective_from DESC, sc.id DESC";
 
-if (!empty($month) && !empty($year)) {
-    // Convert month name to number (April → 4)
-    $monthNumber = date('n', strtotime("1 $month $year"));
-    $firstDayOfMonth = "$year-$monthNumber-01";
-    $lastDayOfMonth = date("Y-m-t", strtotime($firstDayOfMonth));
+$concessions = pg_fetch_all(
+    pg_query_params($con, $concessionQuery, [$studentId, $firstDayOfMonth, $lastDayOfMonth])
+) ?: [];
 
-    $concessionQuery .= " AND (
-        (sc.effective_from <= '$lastDayOfMonth' AND 
-         (sc.effective_until IS NULL OR sc.effective_until >= '$firstDayOfMonth'))
-        OR
-        (EXTRACT(YEAR FROM sc.effective_from) = '$year' AND 
-         EXTRACT(MONTH FROM sc.effective_from) = '$monthNumber')
-    )";
+// ---------- Student info ----------
+$student = pg_fetch_assoc(pg_query_params(
+    $con,
+    "SELECT studentname, class FROM rssimyprofile_student WHERE student_id = $1",
+    [$studentId]
+));
+
+if (!$student) {
+    die("Student not found");
 }
-$concessionQuery .= " ORDER BY sc.effective_from DESC, sc.id DESC";
-
-// Execute queries
-$payments = pg_fetch_all(pg_query($con, $paymentQuery)) ?? [];
-$concessions = pg_fetch_all(pg_query($con, $concessionQuery)) ?? [];
-
-// Get student info
-$studentQuery = "SELECT studentname, class FROM rssimyprofile_student WHERE student_id = '$studentId'";
-$student = pg_fetch_assoc(pg_query($con, $studentQuery));
 ?>
 
 <div class="card">
