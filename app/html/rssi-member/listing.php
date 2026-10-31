@@ -204,7 +204,7 @@ validation();
             <div class="col-lg-1 col-6">
                 <label class="form-label d-lg-none">Image</label>
                 <input type="file" class="form-control form-control-sm"
-                    name="rows[__idx__][image]" accept="image/jpeg,image/png,image/webp">
+                    name="rows[__idx__][image]" accept="image/*">
             </div>
             <div class="col-lg-2 col-12">
                 <div class="d-flex justify-content-end gap-1">
