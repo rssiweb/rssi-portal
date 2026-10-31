@@ -77,6 +77,20 @@ if (isset($_GET['scode']) && !empty($_GET['scode'])) {
     $error = "No verification code provided.";
 }
 
+// Detect "outside recipient" case (out_flag = 1)
+$isOutRecipient = false;
+$outRecipient = null;
+
+if (!empty($certificateData)) {
+    foreach ($certificateData as $c) {
+        if (in_array((string)($c['out_flag'] ?? ''), ['1', 't', 'true'], true)) {
+            $isOutRecipient = true;
+            $outRecipient = $c; // has awarded_to_name, out_email, out_phone
+            break;
+        }
+    }
+}
+
 function calculateExperience($doj, $effectivedate = null)
 {
     if (empty($doj)) return "DOJ not available";
@@ -99,6 +113,20 @@ function calculateExperience($doj, $effectivedate = null)
     } catch (Exception $e) {
         return "Invalid date format";
     }
+}
+
+function renderRemarks($text, $limit = 50)
+{
+    $text = trim((string)$text);
+    if ($text === '') return '';
+
+    if (mb_strlen($text) <= $limit) {
+        return htmlspecialchars($text);
+    }
+
+    return '<span class="remark-short">' . htmlspecialchars(mb_substr($text, 0, $limit)) . '...</span>'
+        . '<span class="remark-full d-none">' . htmlspecialchars($text) . '</span> '
+        . '<a href="#" class="toggle-remark small text-decoration-none">Show more</a>';
 }
 ?>
 
@@ -166,50 +194,71 @@ function calculateExperience($doj, $effectivedate = null)
         <?php if (isset($error)): ?>
             <div class="alert alert-danger text-center"><?= htmlspecialchars($error) ?></div>
         <?php else: ?>
-
-            <!-- Associate Profile Section -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="h5 mb-0">Associate Information</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 text-center mb-3 mb-md-0">
-                            <img src="<?= htmlspecialchars($associateData['photo'] ?? '../img/default-profile.png') ?>" class="img-fluid" alt="Photo" width="100">
-                        </div>
-                        <div class="col-md-9">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Name:</strong> <?= htmlspecialchars($associateData['fullname']) ?></p>
-                                    <p><strong>Associate ID:</strong> <?= htmlspecialchars($associateData['associatenumber']) ?></p>
-                                    <p><strong>Role:</strong> <?= htmlspecialchars($associateData['engagement']) ?></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Designation:</strong> <?= htmlspecialchars($associateData['position']) ?></p>
-                                    <p><strong>Status:</strong>
-                                        <?= htmlspecialchars($associateData['filterstatus']) ?>
-                                    </p>
-                                    <p><strong>Service Period:</strong>
-                                        <?= htmlspecialchars($associateData['doj']) ?> to <?= htmlspecialchars($associateData['effectivedate'] ?? 'Present') ?>
-                                    </p>
-                                </div>
+            <?php if ($isOutRecipient): ?>
+                <!-- Certificate Recipient Section (out_flag = 1) -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="h5 mb-0">Certificate Recipient Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Name:</strong> <?= htmlspecialchars($outRecipient['awarded_to_name'] ?? 'N/A') ?></p>
                             </div>
-                            <div class="row mt-2">
-                                <div class="col-12">
-                                    <div class="d-flex flex-wrap justify-content-between">
-                                        <div class="me-3">
-                                            <strong>Years of Service:</strong>
-                                            <?= htmlspecialchars(calculateExperience($associateData['doj'], $associateData['effectivedate'])) ?>
-                                        </div>
-                                        <div class="me-3">
-                                            <strong>IPF Score:</strong>
-                                            <?= $associateData['ipf'] !== null ? htmlspecialchars($associateData['ipf']) . " / 5" : "N/A" ?>
-                                        </div>
-                                        <div>
-                                            <strong>Exit Interview Conducted By:</strong>
-                                            <?= $associateData['filterstatus'] === 'Active' ? 'N/A (Currently Active)'
-                                                : (empty($associateData['exit_submitted_by_name']) ? 'Formal exit not recorded'
-                                                    : htmlspecialchars($associateData['exit_submitted_by_name'])) ?>
+                            <div class="col-md-4">
+                                <p><strong>Email:</strong> <?= htmlspecialchars($outRecipient['out_email'] ?? 'N/A') ?></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Phone:</strong> <?= htmlspecialchars($outRecipient['out_phone'] ?? 'N/A') ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php else: ?>
+                <!-- Associate Profile Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="h5 mb-0">Associate Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-3 mb-md-0">
+                                <img src="<?= htmlspecialchars($associateData['photo'] ?? '../img/default-profile.png') ?>" class="img-fluid" alt="Photo" width="100">
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Name:</strong> <?= htmlspecialchars($associateData['fullname']) ?></p>
+                                        <p><strong>Associate ID:</strong> <?= htmlspecialchars($associateData['associatenumber']) ?></p>
+                                        <p><strong>Role:</strong> <?= htmlspecialchars($associateData['engagement']) ?></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Designation:</strong> <?= htmlspecialchars($associateData['position']) ?></p>
+                                        <p><strong>Status:</strong>
+                                            <?= htmlspecialchars($associateData['filterstatus']) ?>
+                                        </p>
+                                        <p><strong>Service Period:</strong>
+                                            <?= htmlspecialchars($associateData['doj']) ?> to <?= htmlspecialchars($associateData['effectivedate'] ?? 'Present') ?>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div class="d-flex flex-wrap justify-content-between">
+                                            <div class="me-3">
+                                                <strong>Years of Service:</strong>
+                                                <?= htmlspecialchars(calculateExperience($associateData['doj'], $associateData['effectivedate'])) ?>
+                                            </div>
+                                            <div class="me-3">
+                                                <strong>IPF Score:</strong>
+                                                <?= $associateData['ipf'] !== null ? htmlspecialchars($associateData['ipf']) . " / 5" : "N/A" ?>
+                                            </div>
+                                            <div>
+                                                <strong>Exit Interview Conducted By:</strong>
+                                                <?= $associateData['filterstatus'] === 'Active' ? 'N/A (Currently Active)'
+                                                    : (empty($associateData['exit_submitted_by_name']) ? 'Formal exit not recorded'
+                                                        : htmlspecialchars($associateData['exit_submitted_by_name'])) ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -217,8 +266,7 @@ function calculateExperience($doj, $effectivedate = null)
                         </div>
                     </div>
                 </div>
-            </div>
-
+            <?php endif; ?>
             <!-- Certificates Section -->
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -245,7 +293,7 @@ function calculateExperience($doj, $effectivedate = null)
                                             <td><?= htmlspecialchars($cert['badge_name']) ?></td>
                                             <td><?= $cert['issuedon'] ? date("d/m/Y", strtotime($cert['issuedon'])) : 'N/A' ?></td>
                                             <td><?= htmlspecialchars($cert['nominated_by_name']) ?></td>
-                                            <td><?= htmlspecialchars($cert['comment'] ?? '') ?></td>
+                                            <td><?= renderRemarks($cert['comment'] ?? '') ?></td>
                                             <td>
                                                 <?php if ($cert['certificate_url']): ?>
                                                     <a href="<?= htmlspecialchars($cert['certificate_url']) ?>"
@@ -279,6 +327,22 @@ function calculateExperience($doj, $effectivedate = null)
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('.toggle-remark');
+            if (!link) return;
+            e.preventDefault();
+
+            const cell = link.closest('td');
+            const shortEl = cell.querySelector('.remark-short');
+            const fullEl = cell.querySelector('.remark-full');
+            const expanding = fullEl.classList.contains('d-none');
+
+            fullEl.classList.toggle('d-none', !expanding);
+            shortEl.classList.toggle('d-none', expanding);
+            link.textContent = expanding ? 'Show less' : 'Show more';
+        });
+    </script>
 </body>
 
 </html>
