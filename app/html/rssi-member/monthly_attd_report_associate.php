@@ -949,6 +949,12 @@ foreach ($attendanceData as $r) {
                         fix: true,
                         hint: 'No punch recorded on a scheduled day. Apply for leave or an entry exception if applicable.'
                     },
+                    halfmiss: {
+                        label: 'Punch missing (half day)',
+                        color: '#c2185b',
+                        fix: true,
+                        hint: 'Half day is applied, but punch-in/punch-out is not recorded. Raise an entry/exit exception request to correct it.'
+                    },
                     late: {
                         label: 'Late',
                         color: '#fd7e14',
@@ -1010,7 +1016,7 @@ foreach ($attendanceData as $r) {
                         hint: 'No schedule for this day.'
                     }
                 };
-                const ORDER = ['missout', 'absent', 'late', 'early', 'half', 'leave', 'exc', 'grace', 'noalloc', 'holiday', 'present', 'off'];
+                const ORDER = ['missout', 'absent', 'halfmiss', 'late', 'early', 'half', 'leave', 'exc', 'grace', 'noalloc', 'holiday', 'present', 'off'];
                 const TINT = c => c + '1f';
 
                 function flagsFor(date, d) {
@@ -1035,8 +1041,11 @@ foreach ($attendanceData as $r) {
                         if (d.ex === 'EE') f.add('early');
                         if (entryExc || d.ex === 'Exc.') f.add('exc');
                         if (![...f].some(x => x !== 'holiday')) f.add('present');
-                    } else if (!f.has('leave') && !f.has('half')) {
-                        if (!d.rep) f.add('off');
+                    } else if (!f.has('leave')) {
+                        if (f.has('half')) {
+                            // Half day still requires punch-in/out
+                            if (isPast) f.add('halfmiss');
+                        } else if (!d.rep) f.add('off');
                         else if (isPast) f.add('absent');
                     }
                     return f;
