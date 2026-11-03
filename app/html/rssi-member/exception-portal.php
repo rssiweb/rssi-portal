@@ -71,15 +71,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Only proceed if no existing pending/approved request found for same date(s)
     if (!$duplicateRequest) {
 
-        // Prepare SQL statement for insertion
-        $sql = "INSERT INTO exception_requests (exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by, status) 
-        VALUES ('$exceptionType', '$subExceptionType'," .
-            ($startDateTime ? "'$startDateTime'" : "NULL") . ", " .
-            ($endDateTime ? "'$endDateTime'" : "NULL") . ", " .
-            "'$reason', '$now', '$submittedBy', 'Pending')";
+        // Insert the request and get the auto-increment id back
+        $sql = "INSERT INTO exception_requests
+            (exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending')
+        RETURNING id";
 
-        // Execute the SQL query
-        $result = pg_query($con, $sql);
+        $result = pg_query_params($con, $sql, [
+            $exceptionType,
+            $subExceptionType,
+            $startDateTime,   // null is stored as NULL
+            $endDateTime,
+            $reason,
+            $now,
+            $submittedBy
+        ]);
+
+        $requestId = null;
+        if (!$result) {
+            $success = false;
+        } else {
+            $requestId = pg_fetch_result($result, 0, 'id');   // new exception_requests.id
+        }
 
         // Check if the insertion was successful
         if (!$result) {
@@ -88,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if ($success && $email != "") {
             sendEmail("exceptionapply", array(
-                "id" => $id,
+                "id" => $requestId,
                 "submittedBy" => $submittedBy,
                 "applicantname" => @$fullname,
                 "dateTime" => !empty($startDateTime)
@@ -169,7 +182,7 @@ if ($result && pg_num_rows($result) > 0) {
                             <?php } elseif ($_POST && $success) { ?>
                                 <script>
                                     // Show success message with ID in a JavaScript alert
-                                    alert("Exception request submitted successfully. ID: <?php echo @$id ?>");
+                                    alert("Exception request submitted successfully. ID: <?php echo $requestId ?>");
                                     if (window.history.replaceState) {
                                         // Update the URL without causing a page reload or resubmission
                                         window.history.replaceState(null, null, window.location.href);

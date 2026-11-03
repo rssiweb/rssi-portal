@@ -135,7 +135,8 @@ class MenuConfig
                     'monthly_attd_report_associate.php' => ['title' => 'Monthly Associate Report', 'show_in_menu' => false],
                     'attendance-analytics.php' => ['title' => 'Attendance Analytics', 'show_in_menu' => false],
                     'remote_attendance.php' => ['title' => 'Remote Attendance', 'show_in_menu' => false],
-                    'sas.php' => ['title' => 'SAS', 'show_in_menu' => false]
+                    'sas.php' => ['title' => 'SAS', 'show_in_menu' => false],
+                    'attendance_followup.php' => ['title' => 'Associate Attendance Follow-up', 'show_in_menu' => false]
                 ]
             ],
 
