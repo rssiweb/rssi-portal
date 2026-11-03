@@ -17,7 +17,8 @@ if ($role == 'Admin') {
     // Only fetch data for selected teachers (for preloading into Select2)
     $teachers = [];
 
-    if (!empty($selectedTeachers)) {
+    if (!empty($selectedTeachers) && is_array($selectedTeachers)) {
+        $selectedTeachers = array_values($selectedTeachers);
         $placeholders = implode(',', array_map(
             fn($i) => '$' . ($i + 1),
             array_keys($selectedTeachers)
@@ -28,7 +29,6 @@ if ($role == 'Admin') {
             FROM rssimyaccount_members 
             WHERE associatenumber IN ($placeholders) 
               AND filterstatus = 'Active' 
-              -- AND engagement IN ('Employee', 'Intern') OR position IN ('Intern')
         ";
 
         $result = pg_query_params($con, $query, $selectedTeachers);
@@ -48,18 +48,19 @@ if ($role == 'Admin') {
 // Get filter values from GET parameters
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
 
-$selectedTeachers = isset($_GET['teacher_id_viva']) ? $_GET['teacher_id_viva'] : [];
+$selectedTeachers = isset($_GET['teacher_id_viva']) && is_array($_GET['teacher_id_viva']) ? $_GET['teacher_id_viva'] : [];
 $engagementFilter = isset($_GET['engagement']) ? $_GET['engagement'] : '';
 ?>
 <?php
-// $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
-
-// Check if month parameter is set, if not, set to empty
+// Month parameter (must be YYYY-MM, otherwise treated as not selected)
 $month = isset($_GET['get_month']) ? $_GET['get_month'] : '';
+if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+    $month = '';
+}
 
 // Calculate the start and end dates of the month
-$startDate = date("Y-m-01", strtotime($month));
-$endDate = date("Y-m-t", strtotime($month));
+$startDate = $month !== '' ? date("Y-m-01", strtotime($month . '-01')) : date('Y-m-01');
+$endDate   = $month !== '' ? date("Y-m-t", strtotime($month . '-01')) : date('Y-m-t');
 
 // Construct the ID condition
 $idCondition = $id != null ? "AND m.filterstatus = '" . pg_escape_string($con, $id) . "'" : '';
@@ -74,7 +75,7 @@ if (!empty($selectedTeachers)) {
     $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
 }
 
-// NEW: Construct the engagement condition
+// Engagement condition
 $engagementCondition = '';
 if (!empty($engagementFilter)) {
     $engagementCondition = "AND m.engagement = '" . pg_escape_string($con, $engagementFilter) . "'";
@@ -93,6 +94,18 @@ WITH date_range AS (
     )::date AS attendance_date
 ),
 
+-- Holidays and workday overrides (same logic as the timesheet report)
+holiday_set AS (
+    SELECT holiday_date, location
+    FROM holidays
+    WHERE is_flexi = false
+),
+workday_exc AS (
+    SELECT exception_date, location_id
+    FROM workday_exceptions
+    WHERE is_workday = TRUE
+),
+
 -- 1. Filter members ONCE
 members AS (
     SELECT
@@ -103,7 +116,8 @@ members AS (
         m.position,
         COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
         m.effectivedate,
-        m.doj
+        m.doj,
+        m.depb
     FROM rssimyaccount_members m
     WHERE (m.filterstatus = 'Active'
            OR (m.filterstatus = 'Inactive'
@@ -114,7 +128,7 @@ members AS (
       $idCondition
       $teacherCondition
       $engagementCondition
-      " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
+      " . ($role !== 'Admin' ? "AND m.associatenumber = '" . pg_escape_string($con, $associatenumber) . "'" : "") . "
 ),
 
 -- 2. Pre-aggregate punch in/out per user per day (no status split)
@@ -206,7 +220,13 @@ base AS (
         ee.late_entry_time,
         xe.exit_time AS exc_exit_time,
         COALESCE(la.has_full_leave, 0)  AS has_full_leave,
-        COALESCE(la.halfday_count, 0)   AS halfday_count
+        COALESCE(la.halfday_count, 0)   AS halfday_count,
+        EXISTS (SELECT 1 FROM holiday_set h
+                 WHERE h.holiday_date = d.attendance_date
+                   AND (h.location IS NULL OR h.location = m.depb)) AS holiday_match,
+        EXISTS (SELECT 1 FROM workday_exc w
+                 WHERE w.exception_date = d.attendance_date
+                   AND (w.location_id IS NULL OR w.location_id = m.depb)) AS workday_override
     FROM members m
     CROSS JOIN date_range d
     LEFT JOIN punch_agg p
@@ -237,6 +257,7 @@ final AS (
         b.*,
         COALESCE(b.missed_entry_time, b.punch_in)   AS eff_punch_in,
         COALESCE(b.exc_exit_time,     b.punch_out)  AS eff_punch_out,
+        (b.holiday_match AND NOT b.workday_override) AS is_holiday,
 
         CASE
             WHEN b.punch_in IS NOT NULL THEN 'P'
@@ -304,6 +325,10 @@ SELECT
     f.eff_punch_in   AS punch_in,
     f.eff_punch_out  AS punch_out,
     f.reporting_time,
+    f.exit_time      AS sched_exit_time,
+    f.has_full_leave,
+    f.halfday_count,
+    f.is_holiday,
     f.late_status,
     f.exit_status,
     f.exception_status,
@@ -340,20 +365,45 @@ ORDER BY f.associatenumber, f.attendance_date;
     }
 
     // Fetch attendance data
-    $attendanceData = pg_fetch_all($result);
+    $attendanceData = pg_fetch_all($result) ?: [];
     $uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associatenumber'));
     $associateNumberCount = count($uniqueAssociateNumbers);
 } else {
-    // Set empty data when no month is selected
     $attendanceData = [];
     $uniqueAssociateNumbers = [];
     $associateNumberCount = 0;
 }
 
-
+// ---------- Data for the calendar (summary) view ----------
+$fmtTime = fn($t) => $t ? date('h:i A', strtotime($t)) : '';
+$calUsers = [];
+foreach ($attendanceData as $r) {
+    $a = $r['associatenumber'];
+    if (!isset($calUsers[$a])) {
+        $calUsers[$a] = [
+            'id'         => $a,
+            'name'       => $r['fullname'],
+            'engagement' => $r['engagement'],
+            'status'     => $r['filterstatus'],
+            'present'    => (float)$r['attended_classes'],
+            'days'       => [],
+        ];
+    }
+    $calUsers[$a]['days'][$r['attendance_date']] = [
+        'in'    => $fmtTime($r['punch_in']),
+        'out'   => $fmtTime($r['punch_out']),
+        'rep'   => $fmtTime($r['reporting_time']),
+        'exit'  => $fmtTime($r['sched_exit_time']),
+        'att'   => $r['attendance_status'],
+        'late'  => $r['late_status'],
+        'ex'    => $r['exit_status'],
+        'exc'   => $r['exception_status'],
+        'leave' => (int)$r['has_full_leave'],
+        'half'  => (int)$r['halfday_count'],
+        'hol'   => ($r['is_holiday'] === 't'),
+    ];
+}
 ?>
-
-
 
 <!doctype html>
 <html lang="en">
@@ -375,8 +425,6 @@ ORDER BY f.associatenumber, f.attendance_date;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include 'includes/meta.php' ?>
 
-
-
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -392,7 +440,6 @@ ORDER BY f.associatenumber, f.attendance_date;
     <script>
         glowCookies.start('en', {
             analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
@@ -424,17 +471,14 @@ ORDER BY f.associatenumber, f.attendance_date;
                 },
                 minimumInputLength: 2,
                 placeholder: 'Select associate(s)',
-                // allowClear: true,
                 multiple: true
             });
             // Prepopulate selected values (on form reload)
-            <?php if (!empty($_GET['teacher_id_viva'])): ?>
-                var selectedTeachers = <?php echo json_encode($_GET['teacher_id_viva']); ?>;
+            <?php if (!empty($teachers)): ?>
                 <?php foreach ($teachers as $teacher): ?>
-                    <?php if (in_array($teacher['associatenumber'], $_GET['teacher_id_viva'])): ?>
-                        var option = new Option("<?= $teacher['associatenumber'] . ' - ' . $teacher['fullname'] ?>", "<?= $teacher['associatenumber'] ?>", true, true);
-                        $('#teacher_id_viva').append(option).trigger('change');
-                    <?php endif; ?>
+                    $('#teacher_id_viva').append(
+                        new Option(<?= json_encode($teacher['associatenumber'] . ' - ' . $teacher['fullname']) ?>, <?= json_encode($teacher['associatenumber']) ?>, true, true)
+                    ).trigger('change');
                 <?php endforeach; ?>
             <?php endif; ?>
         });
@@ -455,6 +499,132 @@ ORDER BY f.associatenumber, f.attendance_date;
 
             100% {
                 opacity: 1;
+            }
+        }
+
+        /* ---------- Calendar view ---------- */
+        .cal-wrap {
+            max-width: 1100px;
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .cal-head {
+            text-align: center;
+            font-weight: 600;
+            font-size: .8rem;
+            color: #6c757d;
+            padding: 4px 0;
+        }
+
+        .cal-cell {
+            min-height: 92px;
+            border-radius: 8px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+            border-left-width: 5px;
+            background: #fff;
+            transition: transform .08s, box-shadow .08s;
+            overflow: hidden;
+        }
+
+        .cal-cell:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+        }
+
+        .cal-cell.empty {
+            visibility: hidden;
+            cursor: default;
+        }
+
+        .cal-cell.today {
+            outline: 2px solid #0d6efd;
+        }
+
+        .cal-cell.dim {
+            opacity: .25;
+        }
+
+        .cal-day {
+            font-weight: 700;
+            font-size: .9rem;
+        }
+
+        .cal-time {
+            font-size: .72rem;
+            color: #495057;
+            line-height: 1.25;
+        }
+
+        .cal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin-top: 4px;
+        }
+
+        .cal-tag {
+            font-size: .62rem;
+            padding: 1px 5px;
+            border-radius: 10px;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .legend-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            margin: 0 6px 6px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            font-size: .8rem;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .legend-chip.active {
+            box-shadow: 0 0 0 2px #0d6efd;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .attn-box {
+            border-left: 4px solid #dc3545;
+            background: #fff5f5;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: .88rem;
+        }
+
+        @media (max-width: 768px) {
+            .cal-cell {
+                min-height: 64px;
+                padding: 4px;
+            }
+
+            .cal-time,
+            .cal-tag span.t {
+                display: none;
+            }
+
+            .cal-tag {
+                width: 10px;
+                height: 10px;
+                padding: 0;
+                font-size: 0;
             }
         }
     </style>
@@ -483,12 +653,12 @@ ORDER BY f.associatenumber, f.attendance_date;
                                 <!-- Export Button -->
                                 <form method="POST" action="export_function.php">
                                     <input type="hidden" value="monthly_attd_associate" name="export_type" />
-                                    <input type="hidden" value="<?php echo $id ?>" name="id" />
-                                    <input type="hidden" value="<?php echo $month ?>" name="month" />
-                                    <input type="hidden" value="<?php echo $associatenumber ?>" name="associateNumber" />
-                                    <input type="hidden" value="<?php echo $role ?>" name="role" />
-                                    <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>" name="selectedTeachers" />
-                                    <input type="hidden" value="<?php echo $engagementFilter ?>" name="engagementFilter" />
+                                    <input type="hidden" value="<?php echo htmlspecialchars($id) ?>" name="id" />
+                                    <input type="hidden" value="<?php echo htmlspecialchars($month) ?>" name="month" />
+                                    <input type="hidden" value="<?php echo htmlspecialchars($associatenumber) ?>" name="associateNumber" />
+                                    <input type="hidden" value="<?php echo htmlspecialchars($role) ?>" name="role" />
+                                    <input type="hidden" value="<?php echo htmlspecialchars(implode(',', $selectedTeachers)) ?>" name="selectedTeachers" />
+                                    <input type="hidden" value="<?php echo htmlspecialchars($engagementFilter) ?>" name="engagementFilter" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
             padding: 0px;
@@ -517,7 +687,7 @@ ORDER BY f.associatenumber, f.attendance_date;
                                                             <option disabled selected hidden>Select Status</option>
                                                         <?php
                                                         } else { ?>
-                                                            <option hidden selected><?php echo $id ?></option>
+                                                            <option hidden selected><?php echo htmlspecialchars($id) ?></option>
                                                         <?php }
                                                         ?>
                                                         <option>Active</option>
@@ -526,16 +696,15 @@ ORDER BY f.associatenumber, f.attendance_date;
                                                     <small class="form-text text-muted">Select Status</small>
                                                 </div>
                                             </div>
-                                            <!-- NEW: Engagement Dropdown -->
+                                            <!-- Engagement Dropdown -->
                                             <div class="col-md-3 col-lg-2">
                                                 <div class="form-group">
                                                     <select name="engagement" id="engagement" class="form-select">
                                                         <option value="">All Engagements</option>
-                                                        <option value="Employee" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Employee') ? 'selected' : ''; ?>>Employee</option>
-                                                        <option value="Intern" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Intern') ? 'selected' : ''; ?>>Intern</option>
-                                                        <option value="Member" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Member') ? 'selected' : ''; ?>>Member</option>
-                                                        <option value="Volunteer" <?php echo (isset($_GET['engagement']) && $_GET['engagement'] == 'Volunteer') ? 'selected' : ''; ?>>Volunteer</option>
-                                                        <!-- Add more options based on your actual engagement values -->
+                                                        <option value="Employee" <?php echo ($engagementFilter == 'Employee') ? 'selected' : ''; ?>>Employee</option>
+                                                        <option value="Intern" <?php echo ($engagementFilter == 'Intern') ? 'selected' : ''; ?>>Intern</option>
+                                                        <option value="Member" <?php echo ($engagementFilter == 'Member') ? 'selected' : ''; ?>>Member</option>
+                                                        <option value="Volunteer" <?php echo ($engagementFilter == 'Volunteer') ? 'selected' : ''; ?>>Volunteer</option>
                                                     </select>
                                                     <small class="form-text text-muted">Engagement Type</small>
                                                 </div>
@@ -552,31 +721,12 @@ ORDER BY f.associatenumber, f.attendance_date;
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <!-- <input type="month" name="get_month" id="get_month" class="form-control"
-                                                    placeholder="Month"
-                                                    value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
-                                                <small class="form-text text-muted">Select Month</small> -->
                                                 <input type="month" name="get_month" id="get_month" class="form-control"
                                                     placeholder="Select Month"
-                                                    value="<?php echo isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : ''; ?>">
+                                                    value="<?php echo htmlspecialchars($month); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
-                                        <!-- <script>
-                                            $(function() {
-                                                $("#get_month").datepicker({
-                                                    dateFormat: "yy-mm", // Format to show in the input
-                                                    changeMonth: true,
-                                                    changeYear: true,
-                                                    showButtonPanel: true,
-                                                    onClose: function(dateText, inst) {
-                                                        var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
-                                                        var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
-                                                        $(this).val(year + '-' + (parseInt(month) + 1)); // Adjust month by adding 1
-                                                    }
-                                                });
-                                            });
-                                        </script> -->
                                         <div class="col-12 col-sm-2">
                                             <button type="submit" name="search_by_id" class="btn btn-success"
                                                 style="outline: none;">
@@ -587,18 +737,7 @@ ORDER BY f.associatenumber, f.attendance_date;
 
                                 </form>
                                 <?php
-                                // Explode the month into year and month components
-                                $components = explode("-", $month);
-                                if (count($components) === 2) {
-                                    $year = $components[0];
-                                    $monthNumber = $components[1];
-
-                                    // Create a DateTime object using the year and month
-                                    $dateTime = new DateTime("$year-$monthNumber-01");
-                                } else {
-                                    // Handle the case where $month is not in the expected format
-                                    $dateTime = null;
-                                }
+                                $dateTime = $month !== '' ? new DateTime($month . '-01') : null;
                                 ?>
                                 <div class="row align-items-center">
                                     <div class="col-6">
@@ -607,8 +746,6 @@ ORDER BY f.associatenumber, f.attendance_date;
                                             <span class="blink-text">
                                                 <?= $dateTime->format('F Y') ?>
                                             </span>
-                                        <?php else: ?>
-                                            Invalid month format
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -623,100 +760,145 @@ ORDER BY f.associatenumber, f.attendance_date;
                                         <i class="bi bi-exclamation-triangle"></i> No attendance data found for the selected month.
                                     </div>
                                 <?php else: ?>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered">
-                                            <?php
-                                            // Build the FULL sorted list of dates for the selected month (from calendar, not from data)
-                                            $dates = [];
-                                            $period = new DatePeriod(
-                                                new DateTime($startDate),
-                                                new DateInterval('P1D'),
-                                                (new DateTime($endDate))->modify('+1 day')
-                                            );
-                                            foreach ($period as $d) {
-                                                $dates[] = $d->format('Y-m-d');
-                                            }
 
-                                            // Group attendance rows by [associate][date] for O(1) lookup
-                                            $grouped = [];
-                                            foreach ($attendanceData as $row) {
-                                                $aid  = $row['associatenumber'];
-                                                $date = $row['attendance_date'];
-                                                if (!isset($grouped[$aid][$date])) {
-                                                    $grouped[$aid][$date] = $row;
-                                                }
-                                            }
-                                            ?>
-                                            <thead>
-                                                <tr>
-                                                    <th>Associate number</th>
-                                                    <th>Name</th>
-                                                    <th>Category</th>
-                                                    <th>Status</th>
-                                                    <th>Present</th>
-                                                    <th>Missing Punch-Out</th>
-                                                    <?php foreach ($dates as $date): ?>
-                                                        <th><?= date("j", strtotime($date)) ?> (In)</th>
-                                                        <th><?= date("j", strtotime($date)) ?> (Out)</th>
+                                    <!-- View switcher -->
+                                    <ul class="nav nav-tabs mb-3">
+                                        <li class="nav-item">
+                                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#calendarView" type="button">
+                                                <i class="bi bi-calendar3"></i> Calendar
+                                            </button>
+                                        </li>
+                                        <li class="nav-item">
+                                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#detailedView" type="button">
+                                                <i class="bi bi-table"></i> Detailed
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <div class="tab-content">
+
+                                        <!-- ================= CALENDAR (SUMMARY) VIEW ================= -->
+                                        <div class="tab-pane fade show active" id="calendarView">
+                                            <div class="cal-wrap">
+                                                <div class="row g-2 align-items-end mb-3">
+                                                    <div class="col-md-5" id="calUserWrap">
+                                                        <select id="calUser" class="form-select"></select>
+                                                        <small class="form-text text-muted">Associate</small>
+                                                    </div>
+                                                    <div class="col-md-7 small" id="calUserInfo"></div>
+                                                </div>
+
+                                                <div id="calLegend" class="mb-2"></div>
+                                                <div id="calAttention" class="attn-box mb-3 d-none"></div>
+
+                                                <div class="cal-grid mb-1">
+                                                    <?php foreach (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $w): ?>
+                                                        <div class="cal-head"><?= $w ?></div>
                                                     <?php endforeach; ?>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($grouped as $aid => $rowsByDate):
-                                                    $first = reset($rowsByDate);
-                                                ?>
-                                                    <tr>
-                                                        <td><?= htmlspecialchars($first['associatenumber']) ?></td>
-                                                        <td><?= htmlspecialchars($first['fullname']) ?></td>
-                                                        <td><?= htmlspecialchars($first['engagement']) ?></td>
-                                                        <td><?= htmlspecialchars($first['filterstatus']) ?></td>
-                                                        <td>
-                                                            <?php
-                                                            $v = (float)$first['attended_classes'];
-                                                            echo htmlspecialchars(rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.'));
-                                                            ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php
-                                                            $mpCount = (int)($first['missing_punch_out_count'] ?? 0);
-                                                            if ($mpCount > 0) {
-                                                                $datesStr = $first['missing_punch_out_dates'] ?? '';
-                                                                // Convert "2026-09-04, 2026-09-12" → "4, 12"
-                                                                $days = array_map(fn($d) => date('j', strtotime(trim($d))), explode(',', $datesStr));
-                                                                echo htmlspecialchars($mpCount . ' (' . implode(', ', $days) . ')');
-                                                            } else {
-                                                                echo 'None';
-                                                            }
-                                                            ?>
-                                                        </td>
-                                                        <?php foreach ($dates as $date):
-                                                            if (isset($rowsByDate[$date])) {
-                                                                $row = $rowsByDate[$date];
-                                                                $punchIn  = $row['punch_in']  ? date("h:i A", strtotime($row['punch_in']))  : '';
-                                                                $punchOut = $row['punch_out'] ? date("h:i A", strtotime($row['punch_out'])) : '';
+                                                </div>
+                                                <div class="cal-grid" id="calGrid"></div>
+                                            </div>
+                                        </div>
 
-                                                                $inCell  = $punchIn
-                                                                    . ($row['late_status']      ? " (" . $row['late_status'] . ")"      : '')
-                                                                    . ($row['exception_status'] ? " (" . $row['exception_status'] . ")" : '');
-                                                                $outCell = $punchOut
-                                                                    . ($row['exit_status'] ? " (" . $row['exit_status'] . ")" : '');
-                                                            } else {
-                                                                $inCell = $outCell = '';
-                                                            }
+                                        <!-- ================= DETAILED VIEW (original) ================= -->
+                                        <div class="tab-pane fade" id="detailedView">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered">
+                                                    <?php
+                                                    // Full sorted list of dates for the selected month
+                                                    $dates = [];
+                                                    $period = new DatePeriod(
+                                                        new DateTime($startDate),
+                                                        new DateInterval('P1D'),
+                                                        (new DateTime($endDate))->modify('+1 day')
+                                                    );
+                                                    foreach ($period as $d) {
+                                                        $dates[] = $d->format('Y-m-d');
+                                                    }
+
+                                                    // Group attendance rows by [associate][date]
+                                                    $grouped = [];
+                                                    foreach ($attendanceData as $row) {
+                                                        $aid  = $row['associatenumber'];
+                                                        $date = $row['attendance_date'];
+                                                        if (!isset($grouped[$aid][$date])) {
+                                                            $grouped[$aid][$date] = $row;
+                                                        }
+                                                    }
+                                                    ?>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Associate number</th>
+                                                            <th>Name</th>
+                                                            <th>Category</th>
+                                                            <th>Status</th>
+                                                            <th>Present</th>
+                                                            <th>Missing Punch-Out</th>
+                                                            <?php foreach ($dates as $date): ?>
+                                                                <th><?= date("j", strtotime($date)) ?> (In)</th>
+                                                                <th><?= date("j", strtotime($date)) ?> (Out)</th>
+                                                            <?php endforeach; ?>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($grouped as $aid => $rowsByDate):
+                                                            $first = reset($rowsByDate);
                                                         ?>
-                                                            <td><?= $inCell ?></td>
-                                                            <td><?= $outCell ?></td>
+                                                            <tr>
+                                                                <td><?= htmlspecialchars($first['associatenumber']) ?></td>
+                                                                <td><?= htmlspecialchars($first['fullname']) ?></td>
+                                                                <td><?= htmlspecialchars($first['engagement']) ?></td>
+                                                                <td><?= htmlspecialchars($first['filterstatus']) ?></td>
+                                                                <td>
+                                                                    <?php
+                                                                    $v = (float)$first['attended_classes'];
+                                                                    echo htmlspecialchars(rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.'));
+                                                                    ?>
+                                                                </td>
+                                                                <td>
+                                                                    <?php
+                                                                    $mpCount = (int)($first['missing_punch_out_count'] ?? 0);
+                                                                    if ($mpCount > 0) {
+                                                                        $datesStr = $first['missing_punch_out_dates'] ?? '';
+                                                                        $days = array_map(fn($d) => date('j', strtotime(trim($d))), explode(',', $datesStr));
+                                                                        echo htmlspecialchars($mpCount . ' (' . implode(', ', $days) . ')');
+                                                                    } else {
+                                                                        echo 'None';
+                                                                    }
+                                                                    ?>
+                                                                </td>
+                                                                <?php foreach ($dates as $date):
+                                                                    if (isset($rowsByDate[$date])) {
+                                                                        $row = $rowsByDate[$date];
+                                                                        $punchIn  = $row['punch_in']  ? date("h:i A", strtotime($row['punch_in']))  : '';
+                                                                        $punchOut = $row['punch_out'] ? date("h:i A", strtotime($row['punch_out'])) : '';
+
+                                                                        $inCell  = $punchIn
+                                                                            . ($row['late_status']      ? " (" . $row['late_status'] . ")"      : '')
+                                                                            . ($row['exception_status'] ? " (" . $row['exception_status'] . ")" : '');
+                                                                        $outCell = $punchOut
+                                                                            . ($row['exit_status'] ? " (" . $row['exit_status'] . ")" : '');
+                                                                    } else {
+                                                                        $inCell = $outCell = '';
+                                                                    }
+                                                                ?>
+                                                                    <td><?= $inCell ?></td>
+                                                                    <td><?= $outCell ?></td>
+                                                                <?php endforeach; ?>
+                                                            </tr>
                                                         <?php endforeach; ?>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                    </div><!-- /tab-content -->
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
         </section>
     </main>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
@@ -730,8 +912,269 @@ ORDER BY f.associatenumber, f.attendance_date;
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
+    <!-- Day detail modal (calendar) -->
+    <div class="modal fade" id="dayModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dayModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="dayModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Modal -->
+    <?php if (!empty($attendanceData)): ?>
+        <script>
+            (function() {
+                const USERS = <?= json_encode($calUsers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+                const MONTH_START = <?= json_encode($startDate) ?>;
+                const TODAY = <?= json_encode(date('Y-m-d')) ?>;
+
+                // Category definitions (ORDER = priority for the cell's main colour)
+                const CATS = {
+                    missout: {
+                        label: 'Missing punch-out',
+                        color: '#dc3545',
+                        fix: true,
+                        hint: 'Punch-out not recorded. Raise an exit exception request to correct it.'
+                    },
+                    absent: {
+                        label: 'Absent',
+                        color: '#6c1d24',
+                        fix: true,
+                        hint: 'No punch recorded on a scheduled day. Apply for leave or an entry exception if applicable.'
+                    },
+                    late: {
+                        label: 'Late',
+                        color: '#fd7e14',
+                        fix: true,
+                        hint: 'Punched in more than 10 minutes after reporting time. Raise an entry exception if justified.'
+                    },
+                    early: {
+                        label: 'Early exit',
+                        color: '#e0a800',
+                        fix: true,
+                        hint: 'Punched out before scheduled exit time. Raise an exit exception if justified.'
+                    },
+                    half: {
+                        label: 'Half day',
+                        color: '#6f42c1',
+                        fix: false,
+                        hint: 'Approved half-day leave.'
+                    },
+                    leave: {
+                        label: 'Leave',
+                        color: '#20c997',
+                        fix: false,
+                        hint: 'Approved leave.'
+                    },
+                    exc: {
+                        label: 'Exception (approved)',
+                        color: '#0d6efd',
+                        fix: false,
+                        hint: 'An approved exception was applied to this day.'
+                    },
+                    grace: {
+                        label: 'Grace entry',
+                        color: '#b8a000',
+                        fix: false,
+                        hint: 'Punched in within the 10-minute grace window.'
+                    },
+                    holiday: {
+                        label: 'Holiday',
+                        color: '#6c8ebf',
+                        fix: false,
+                        hint: 'Holiday - no attendance required.'
+                    },
+                    noalloc: {
+                        label: 'No allocation',
+                        color: '#795548',
+                        fix: false,
+                        hint: 'No reporting time allocated. Contact your supervisor.'
+                    },
+                    present: {
+                        label: 'Present',
+                        color: '#198754',
+                        fix: false,
+                        hint: ''
+                    },
+                    off: {
+                        label: 'No schedule',
+                        color: '#adb5bd',
+                        fix: false,
+                        hint: 'No schedule for this day.'
+                    }
+                };
+                const ORDER = ['missout', 'absent', 'late', 'early', 'half', 'leave', 'exc', 'grace', 'noalloc', 'holiday', 'present', 'off'];
+                const TINT = c => c + '1f';
+
+                function flagsFor(date, d) {
+                    const f = new Set();
+                    if (!d || d.att === null) return f;
+                    const isPast = date < TODAY;
+                    const hol = d.hol ? 'holiday' : null;
+                    if (hol && !d.in) {
+                        f.add(hol);
+                        return f;
+                    } // holiday, no punch: never absent
+                    if (hol) f.add(hol); // worked on a holiday
+                    if (d.leave === 1 || d.late === 'Leave') f.add('leave');
+                    if (d.late === 'HF') f.add('half');
+                    if (d.in) {
+                        if (!d.out && isPast) f.add('missout');
+                        // An approved entry exception resolves lateness, so it needs no action
+                        const entryExc = d.late === 'Exc.' || d.late === 'Exc.L' || (d.exc && d.exc.indexOf('Exc') === 0);
+                        if (d.late === 'L' && !entryExc) f.add('late');
+                        if (d.late === 'W') f.add('grace');
+                        if (d.late === 'NA') f.add('noalloc');
+                        if (d.ex === 'EE') f.add('early');
+                        if (entryExc || d.ex === 'Exc.') f.add('exc');
+                        if (![...f].some(x => x !== 'holiday')) f.add('present');
+                    } else if (!f.has('leave') && !f.has('half')) {
+                        if (!d.rep) f.add('off');
+                        else if (isPast) f.add('absent');
+                    }
+                    return f;
+                }
+
+                function mainCat(flags) {
+                    for (const c of ORDER)
+                        if (flags.has(c)) return c;
+                    return null;
+                }
+
+                const sel = document.getElementById('calUser');
+                const ids = Object.keys(USERS);
+                ids.forEach(id => {
+                    const o = document.createElement('option');
+                    o.value = id;
+                    o.textContent = id + ' - ' + USERS[id].name;
+                    sel.appendChild(o);
+                });
+                if (ids.length < 2) document.getElementById('calUserWrap').classList.add('d-none');
+
+                let activeFilter = null;
+                const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                } [m]));
+                const pad = n => String(n).padStart(2, '0');
+
+                function render() {
+                    const u = USERS[sel.value];
+                    const [y, m] = MONTH_START.split('-').map(Number);
+                    const first = new Date(y, m - 1, 1).getDay();
+                    const days = new Date(y, m, 0).getDate();
+                    const counts = {};
+                    const attention = [];
+                    const grid = document.getElementById('calGrid');
+                    grid.innerHTML = '';
+
+                    for (let i = 0; i < first; i++) grid.insertAdjacentHTML('beforeend', '<div class="cal-cell empty"></div>');
+
+                    for (let day = 1; day <= days; day++) {
+                        const date = `${y}-${pad(m)}-${pad(day)}`;
+                        const d = u.days[date];
+                        const flags = flagsFor(date, d);
+                        const main = mainCat(flags);
+                        flags.forEach(f => counts[f] = (counts[f] || 0) + 1);
+                        if ([...flags].some(f => CATS[f].fix)) attention.push(day);
+
+                        const color = main ? CATS[main].color : '#dee2e6';
+                        const cell = document.createElement('div');
+                        cell.className = 'cal-cell' + (date === TODAY ? ' today' : '');
+                        cell.style.borderLeftColor = color;
+                        cell.style.background = main && main !== 'off' ? TINT(color) : '#fff';
+                        if (activeFilter && !flags.has(activeFilter)) cell.classList.add('dim');
+
+                        let html = `<div class="cal-day">${day}</div>`;
+                        if (d && (d.in || d.out)) {
+                            html += `<div class="cal-time">In ${esc(d.in) || '–'}<br>Out ${esc(d.out) || '–'}</div>`;
+                        }
+                        html += '<div class="cal-tags">';
+                        ORDER.forEach(c => {
+                            if (flags.has(c) && c !== 'present' && c !== 'off') {
+                                html += `<span class="cal-tag" style="background:${CATS[c].color}" title="${esc(CATS[c].label)}"><span class="t">${esc(CATS[c].label.split(' ')[0])}</span></span>`;
+                            }
+                        });
+                        html += '</div>';
+                        cell.innerHTML = html;
+                        cell.addEventListener('click', () => showDay(date, d, flags));
+                        grid.appendChild(cell);
+                    }
+
+                    document.getElementById('calUserInfo').innerHTML =
+                        `<strong>${esc(u.name)}</strong> &middot; ${esc(u.engagement)} &middot; ${esc(u.status)} &middot; Present: <strong>${u.present}</strong>`;
+
+                    const lg = document.getElementById('calLegend');
+                    lg.innerHTML = '';
+                    ORDER.forEach(c => {
+                        if (!counts[c]) return;
+                        const chip = document.createElement('span');
+                        chip.className = 'legend-chip' + (activeFilter === c ? ' active' : '');
+                        chip.innerHTML = `<span class="legend-dot" style="background:${CATS[c].color}"></span>${esc(CATS[c].label)} <strong>${counts[c]}</strong>`;
+                        chip.onclick = () => {
+                            activeFilter = activeFilter === c ? null : c;
+                            render();
+                        };
+                        lg.appendChild(chip);
+                    });
+
+                    const at = document.getElementById('calAttention');
+                    if (attention.length) {
+                        at.classList.remove('d-none');
+                        at.innerHTML = `<strong>${attention.length} day(s) need attention:</strong> ${attention.join(', ')} &ndash; click a date to see what to fix.`;
+                    } else {
+                        at.classList.add('d-none');
+                    }
+                }
+
+                function showDay(date, d, flags) {
+                    const nice = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    document.getElementById('dayModalTitle').textContent = nice;
+                    const sorted = [...flags].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+                    const badges = sorted.map(c => `<span class="badge me-1" style="background:${CATS[c].color}">${esc(CATS[c].label)}</span>`).join('') ||
+                        '<span class="badge bg-secondary">No data</span>';
+                    let rows = '';
+                    if (d) {
+                        rows = `
+                        <table class="table table-sm mb-3">
+                            <tr><th style="width:45%">Scheduled reporting</th><td>${esc(d.rep) || '–'}</td></tr>
+                            <tr><th>Scheduled exit</th><td>${esc(d.exit) || '–'}</td></tr>
+                            <tr><th>Punch-in</th><td>${esc(d.in) || '–'}${d.late ? ' <span class="text-muted">(' + esc(d.late) + ')</span>' : ''}${d.exc ? ' <span class="text-muted">(' + esc(d.exc) + ')</span>' : ''}</td></tr>
+                            <tr><th>Punch-out</th><td>${esc(d.out) || '–'}${d.ex ? ' <span class="text-muted">(' + esc(d.ex) + ')</span>' : ''}</td></tr>
+                        </table>`;
+                    }
+                    const hints = sorted.filter(c => CATS[c].hint)
+                        .map(c => `<li class="${CATS[c].fix ? 'text-danger' : ''}"><strong>${esc(CATS[c].label)}:</strong> ${esc(CATS[c].hint)}</li>`).join('');
+                    document.getElementById('dayModalBody').innerHTML =
+                        `<div class="mb-3">${badges}</div>${rows}${hints ? '<ul class="small ps-3 mb-0">' + hints + '</ul>' : ''}`;
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('dayModal')).show();
+                }
+
+                sel.addEventListener('change', () => {
+                    activeFilter = null;
+                    render();
+                });
+                if (ids.length) render();
+            })();
+        </script>
+    <?php endif; ?>
+
+    <!-- Status explanation modal -->
     <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -751,13 +1194,11 @@ ORDER BY f.associatenumber, f.attendance_date;
                             </h2>
                             <div id="collapseL" class="accordion-collapse collapse show" aria-labelledby="headingL" data-bs-parent="#statusAccordion">
                                 <div class="accordion-body">
-                                    <p>
-                                        Definition:
+                                    <p>Definition:</p>
                                     <ol>
                                         <li>The associate's punch-in time exceeds the reporting time by more than 10 minutes.</li>
                                         <li>There is no approved exception request for the entry on that day.</li>
                                     </ol>
-                                    </p>
                                     <p>Example:</p>
                                     <ul>
                                         <li>Reporting time: 10:30 AM</li>
@@ -769,7 +1210,7 @@ ORDER BY f.associatenumber, f.attendance_date;
                             </div>
                         </div>
 
-                        <!-- W (On Time) -->
+                        <!-- W (Grace entry) -->
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="headingW">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseW" aria-expanded="false" aria-controls="collapseW">
@@ -782,7 +1223,6 @@ ORDER BY f.associatenumber, f.attendance_date;
                                         <li>The associate's punch-in time is recorded within 10 minutes of the reporting time.</li>
                                         <li>There is no approved exception request for the entry on that day.</li>
                                     </ol>
-                                    </p>
                                     <p>Example:</p>
                                     <ul>
                                         <li>Reporting time: 10:30 AM</li>
@@ -793,6 +1233,7 @@ ORDER BY f.associatenumber, f.attendance_date;
                                 </div>
                             </div>
                         </div>
+
                         <!-- EE (Early Exit) -->
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="headingEE">
@@ -834,7 +1275,6 @@ ORDER BY f.associatenumber, f.attendance_date;
                                         <li>The entry time is overridden by the time specified in the exception request.</li>
                                         <li>The punch-in is recorded as per the exception database.</li>
                                     </ol>
-                                    </p>
                                     <p>Example:</p>
                                     <ul>
                                         <li>Exception request: Missed-entry at 10:38 AM, approved.</li>
