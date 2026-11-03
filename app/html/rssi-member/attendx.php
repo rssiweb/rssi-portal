@@ -132,6 +132,16 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
+                                        <a href="attendance_followup.php" class="card-link">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <i class="bi bi-person-lines-fill icon"></i>
+                                                    <h5 class="card-title mt-3">Associate Attendance Follow-up</h5>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4">
                                         <a href="sas.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
