@@ -124,6 +124,12 @@ $ISSUES = [
         'sev' => 'High',
         'action' => 'Half day leave is applied but no punch is recorded. Ask the associate to raise an entry/exit exception for the hours worked.'
     ],
+    'latehalf' => [
+        'label' => 'Late > 1 hr (half day required)',
+        'color' => '#a4161a',
+        'sev' => 'High',
+        'action' => 'Punch-in is more than 1 hour after the reporting time, so this counts as a half day unless a late-entry exception is approved. Ask the associate to apply for half-day leave, or to raise a late-entry exception with a valid reason for approval.'
+    ],
     'late'     => [
         'label' => 'Late',
         'color' => '#fd7e14',
@@ -157,7 +163,10 @@ function classifyDay(array $r, string $today): array
     if ($hasIn) {
         if (!$hasOut) $issues[] = 'missout';
         $entryExc = in_array($late, ['Exc.', 'Exc.L'], true) || ($exc !== null && strpos($exc, 'Exc') === 0);
-        if ($late === 'L' && !$entryExc) $issues[] = 'late';
+        if ($late === 'L' && !$entryExc) {
+            $lateMin = ($r['late_minutes'] ?? null) !== null ? (float)$r['late_minutes'] : null;
+            $issues[] = ($lateMin !== null && $lateMin > 60) ? 'latehalf' : 'late';
+        }
         if ($r['exit_status'] === 'EE') $issues[] = 'early';
     } else {
         if ($leave) {
@@ -318,14 +327,17 @@ final AS (
              ELSE NULL END AS exit_status,
         CASE WHEN b.missed_entry_time IS NOT NULL
              THEN CASE WHEN b.reporting_time IS NULL THEN 'Exc.NA' ELSE 'Exc.' END
-             ELSE NULL END AS exception_status
+             ELSE NULL END AS exception_status,
+             CASE WHEN b.punch_in IS NOT NULL AND b.reporting_time IS NOT NULL
+             THEN EXTRACT(EPOCH FROM (b.punch_in::time - b.reporting_time)) / 60.0
+             ELSE NULL END AS late_minutes
     FROM base b
 )
 SELECT f.associatenumber, f.fullname, f.engagement, f.position, f.phone, f.supervisor,
        f.attendance_date, f.attendance_status,
        f.eff_punch_in AS punch_in, f.eff_punch_out AS punch_out,
        f.reporting_time, f.exit_time AS sched_exit_time,
-       f.has_full_leave, f.is_holiday, f.late_status, f.exit_status, f.exception_status
+       f.has_full_leave, f.is_holiday, f.late_status, f.exit_status, f.exception_status, f.late_minutes
 FROM final f
 ORDER BY f.associatenumber, f.attendance_date;
 ";
@@ -366,6 +378,7 @@ ORDER BY f.associatenumber, f.attendance_date;
                     'out'  => $fmt($r['punch_out']),
                     'rep'  => $fmt($r['reporting_time']),
                     'exit' => $fmt($r['sched_exit_time']),
+                    'late_min' => (($r['late_minutes'] ?? null) !== null) ? (int)round($r['late_minutes']) : null,
                 ];
                 $byAssociate[$aid]['items'][] = $item;
                 $flat[] = [
@@ -657,7 +670,12 @@ function waLink($a, $ISSUES)
                                                                 <?php foreach ($a['items'] as $it): $meta = $ISSUES[$it['key']]; ?>
                                                                     <tr class="issue-line" data-cat="<?= $it['key'] ?>">
                                                                         <td class="text-nowrap"><?= h(date('D, d M', strtotime($it['date']))) ?></td>
-                                                                        <td><span class="issue-badge" style="background:<?= $meta['color'] ?>"><?= h($meta['label']) ?></span></td>
+                                                                        <td>
+                                                                            <span class="issue-badge" style="background:<?= $meta['color'] ?>"><?= h($meta['label']) ?></span>
+                                                                            <?php if (in_array($it['key'], ['late', 'latehalf'], true) && $it['late_min'] !== null): ?>
+                                                                                <div class="small text-muted"><?= intdiv($it['late_min'], 60) ? intdiv($it['late_min'], 60) . ' h ' : '' ?><?= $it['late_min'] % 60 ?> min late</div>
+                                                                            <?php endif; ?>
+                                                                        </td>
                                                                         <td><?= h($it['in']) ?: '–' ?></td>
                                                                         <td><?= h($it['out']) ?: '–' ?></td>
                                                                         <td class="small"><?= h($it['rep']) ?: '–' ?> &ndash; <?= h($it['exit']) ?: '–' ?></td>
