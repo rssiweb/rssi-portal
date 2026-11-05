@@ -16,12 +16,25 @@ validation();
 <?php
 // Query for certificates
 $query = "
-    SELECT c.awarded_to_id, c.badge_name, c.issuedon, m.fullname, m.photo
+    SELECT 
+        c.awarded_to_id,
+        c.badge_name,
+        c.issuedon,
+        COALESCE(m.fullname, c.awarded_to_name, c.awarded_to_id) AS fullname,
+        m.photo
     FROM certificate c
-    LEFT JOIN rssimyaccount_members m ON c.awarded_to_id = m.associatenumber
-    WHERE c.badge_name NOT IN ('Experience Letter', 'Offer Letter', 'Joining Letter','Employment Verification Letter','Compensation Letter')
+    LEFT JOIN rssimyaccount_members m 
+        ON c.awarded_to_id = m.associatenumber
+    WHERE c.badge_name NOT IN (
+        'Experience Letter',
+        'Offer Letter',
+        'Joining Letter',
+        'Employment Verification Letter',
+        'Compensation Letter'
+    )
     ORDER BY c.issuedon DESC
     LIMIT 3";
+
 $result = pg_query($con, $query);
 ?>
 <?php

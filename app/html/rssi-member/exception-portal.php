@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 include("../../util/email.php");
+include("schedule_helper.php");
 
 // Ensure user is logged in
 if (!isLoggedIn("aid")) {
@@ -19,15 +20,17 @@ $now = date('Y-m-d H:i:s');
 $success = true;
 $duplicateRequest = false;
 $existingStatus = '';
+$validationError = '';
+$requestId = null;
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve form data
-    $exceptionType = $_POST['exceptionType'];
-    $subExceptionType = $_POST['subExceptionType'];
+    $exceptionType = $_POST['exceptionType'] ?? '';
+    $subExceptionType = $_POST['subExceptionType'] ?? '';
     $startDateTime = !empty($_POST['startDateTime']) ? $_POST['startDateTime'] : null;
     $endDateTime = !empty($_POST['endDateTime']) ? $_POST['endDateTime'] : null;
-    $reason = htmlspecialchars($_POST['reason'], ENT_QUOTES, 'UTF-8');
+    $reason = htmlspecialchars($_POST['reason'] ?? '', ENT_QUOTES, 'UTF-8');
     $submittedBy = $associatenumber;
 
     // Extract just the date portion (YYYY-MM-DD) for comparison
@@ -37,39 +40,85 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get the exception date (either start or end date)
     $exceptionDate = $startDate ? $startDate : $endDate;
 
-    // Check for existing non-rejected requests with same parameters on same date(s)
-    $checkSql = "SELECT status FROM exception_requests 
-                WHERE submitted_by = '$submittedBy' 
-                AND exception_type = '$exceptionType' 
-                AND sub_exception_type = '$subExceptionType'";
-
-    if ($startDate) {
-        $checkSql .= " AND (start_date_time::date = '$startDate'";
-        if ($endDate) {
-            $checkSql .= " OR end_date_time::date = '$endDate')";
-        } else {
-            $checkSql .= ")";
-        }
-    } else if ($endDate) {
-        $checkSql .= " AND end_date_time::date = '$endDate'";
-    } else {
-        // If no dates provided at all, just check type/subtype
-        $checkSql .= " AND start_date_time IS NULL AND end_date_time IS NULL";
+    // ---- Basic input validation (whitelist) ----
+    $allowedTypes = [
+        'entry' => ['late-entry', 'missed-entry'],
+        'exit'  => ['early-exit', 'missed-exit'],
+    ];
+    if (!isset($allowedTypes[$exceptionType]) || !in_array($subExceptionType, $allowedTypes[$exceptionType], true)) {
+        $validationError = "Invalid exception type selected.";
     }
 
-    $checkSql .= " AND status != 'Rejected'";
+    // ---- Schedule-based validation (same rules as the JS alert) ----
+    // Late entry: cannot be more than 1 hour after the reporting time of that day
+    if ($validationError === '' && $subExceptionType === 'late-entry' && $startDateTime) {
+        $sched = getScheduleForDate($con, $associatenumber, $startDate);
+        if (!$sched || empty($sched['reporting_time'])) {
+            $validationError = "No schedule is allocated for you on " . date('d/m/Y', strtotime($startDate)) . ". Please contact your supervisor.";
+        } else {
+            $limit = strtotime("$startDate {$sched['reporting_time']}") + 3600;
+            if (strtotime($startDateTime) > $limit) {
+                $validationError = "Late entry is more than 1 hour after your reporting time (" . date('h:i A', strtotime($sched['reporting_time'])) . "). Please apply for leave through the leave portal.";
+            }
+        }
+    }
 
-    $checkResult = pg_query($con, $checkSql);
+    // Early exit: cannot be more than 1 hour before the exit time of that day
+    if ($validationError === '' && $subExceptionType === 'early-exit' && $endDateTime) {
+        $sched = getScheduleForDate($con, $associatenumber, $endDate);
+        if (!$sched || empty($sched['exit_time'])) {
+            $validationError = "No schedule is allocated for you on " . date('d/m/Y', strtotime($endDate)) . ". Please contact your supervisor.";
+        } else {
+            $limit = strtotime("$endDate {$sched['exit_time']}") - 3600;
+            if (strtotime($endDateTime) < $limit) {
+                $validationError = "Early exit is more than 1 hour before your scheduled exit time (" . date('h:i A', strtotime($sched['exit_time'])) . "). Please apply for leave through the leave portal.";
+            }
+        }
+    }
 
-    if (pg_num_rows($checkResult) > 0) {
-        $existingRequest = pg_fetch_assoc($checkResult);
-        $existingStatus = $existingRequest['status'];
-        $duplicateRequest = true;
+    if ($validationError !== '') {
         $success = false;
     }
 
-    // Only proceed if no existing pending/approved request found for same date(s)
-    if (!$duplicateRequest) {
+    // ---- Duplicate check (parameterised) ----
+    if ($validationError === '') {
+        $params = [$submittedBy, $exceptionType, $subExceptionType];
+        $checkSql = "SELECT status FROM exception_requests
+                     WHERE submitted_by = $1
+                       AND exception_type = $2
+                       AND sub_exception_type = $3";
+
+        if ($startDate) {
+            $params[] = $startDate;
+            $checkSql .= " AND (start_date_time::date = $" . count($params) . "::date";
+            if ($endDate) {
+                $params[] = $endDate;
+                $checkSql .= " OR end_date_time::date = $" . count($params) . "::date)";
+            } else {
+                $checkSql .= ")";
+            }
+        } elseif ($endDate) {
+            $params[] = $endDate;
+            $checkSql .= " AND end_date_time::date = $" . count($params) . "::date";
+        } else {
+            // If no dates provided at all, just check type/subtype
+            $checkSql .= " AND start_date_time IS NULL AND end_date_time IS NULL";
+        }
+
+        $checkSql .= " AND status != 'Rejected'";
+
+        $checkResult = pg_query_params($con, $checkSql, $params);
+
+        if ($checkResult && pg_num_rows($checkResult) > 0) {
+            $existingRequest = pg_fetch_assoc($checkResult);
+            $existingStatus = $existingRequest['status'];
+            $duplicateRequest = true;
+            $success = false;
+        }
+    }
+
+    // Only proceed if validation passed and no existing pending/approved request for same date(s)
+    if (!$duplicateRequest && $validationError === '') {
 
         // Insert the request and get the auto-increment id back
         $sql = "INSERT INTO exception_requests
@@ -87,16 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $submittedBy
         ]);
 
-        $requestId = null;
         if (!$result) {
             $success = false;
         } else {
             $requestId = pg_fetch_result($result, 0, 'id');   // new exception_requests.id
-        }
-
-        // Check if the insertion was successful
-        if (!$result) {
-            $success = false;
         }
 
         if ($success && $email != "") {
@@ -113,15 +156,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ), $email);
         }
     }
-}
-// Fetch the latest reporting_time and exit_time for the associate
-$query = "SELECT reporting_time, exit_time FROM associate_schedule WHERE associate_number = '$associatenumber' ORDER BY start_date DESC LIMIT 1";
-$result = pg_query($con, $query);
-
-if ($result && pg_num_rows($result) > 0) {
-    $schedule = pg_fetch_assoc($result);
-    $latestReportingTime = $schedule['reporting_time'];
-    $latestExitTime = $schedule['exit_time'];
 }
 ?>
 <!DOCTYPE html>
@@ -172,9 +206,10 @@ if ($result && pg_num_rows($result) > 0) {
                             <br>
                             <?php if ($_POST && !$success) { ?>
                                 <script>
-                                    // Show error message in a JavaScript alert
-                                    <?php if ($duplicateRequest) { ?>
-                                        alert("A similar request already exists with status: <?php echo $existingStatus ?>. Only rejected requests can be resubmitted.");
+                                    <?php if ($validationError) { ?>
+                                        alert(<?php echo json_encode($validationError); ?>);
+                                    <?php } elseif ($duplicateRequest) { ?>
+                                        alert(<?php echo json_encode("A similar request already exists with status: " . $existingStatus . ". Only rejected requests can be resubmitted."); ?>);
                                     <?php } else { ?>
                                         alert("An error occurred while submitting the request.");
                                     <?php } ?>
@@ -182,7 +217,7 @@ if ($result && pg_num_rows($result) > 0) {
                             <?php } elseif ($_POST && $success) { ?>
                                 <script>
                                     // Show success message with ID in a JavaScript alert
-                                    alert("Exception request submitted successfully. ID: <?php echo $requestId ?>");
+                                    alert("Exception request submitted successfully. ID: <?php echo (int)$requestId; ?>");
                                     if (window.history.replaceState) {
                                         // Update the URL without causing a page reload or resubmission
                                         window.history.replaceState(null, null, window.location.href);
@@ -293,12 +328,12 @@ if ($result && pg_num_rows($result) > 0) {
 
         // Function to check exception count for the month
         async function checkExceptionCount(exceptionDate) {
-            const associateNumber = "<?php echo $associatenumber; ?>";
+            const associateNumber = "<?php echo htmlspecialchars($associatenumber, ENT_QUOTES, 'UTF-8'); ?>";
 
             if (!exceptionDate) return true;
 
             try {
-                const response = await fetch(`get_exception_count.php?associate=${associateNumber}&date=${exceptionDate}`);
+                const response = await fetch(`get_exception_count.php?associate=${encodeURIComponent(associateNumber)}&date=${encodeURIComponent(exceptionDate)}`);
                 const data = await response.json();
 
                 if (data.count >= 3) {
@@ -339,14 +374,8 @@ if ($result && pg_num_rows($result) > 0) {
             const diffTime = exception - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            // Format dates for display
+            // Format date for display
             const formattedExceptionDate = exception.toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-
-            const formattedToday = today.toLocaleDateString('en-GB', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric'
@@ -360,31 +389,20 @@ if ($result && pg_num_rows($result) > 0) {
                 };
             }
 
-            // CASE 2: Past dates - check if within 3 days (including today)
-            // diffDays will be negative for past dates
+            // CASE 2: Past dates - allowed today (0) or up to 3 days past
             const daysPast = Math.abs(diffDays);
 
             if (daysPast <= 3) {
-                // Allowed: today (0 days past) or up to 3 days past
                 return {
                     valid: true,
                     message: ''
                 };
-            } else {
-                // Not allowed: more than 3 days past
-                const lastAllowedDate = new Date(today);
-                lastAllowedDate.setDate(today.getDate() - 3);
-                const formattedLastAllowed = lastAllowedDate.toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-
-                return {
-                    valid: false,
-                    message: `The selected date (${formattedExceptionDate}) is outside the allowed exception request window. Exception requests must be submitted within 3 calendar days of the exception date.`
-                };
             }
+
+            return {
+                valid: false,
+                message: `The selected date (${formattedExceptionDate}) is outside the allowed exception request window. Exception requests must be submitted within 3 calendar days of the exception date.`
+            };
         }
 
         // Update the date input validation
@@ -419,7 +437,6 @@ if ($result && pg_num_rows($result) > 0) {
         });
 
         // Override form submission
-        // Override form submission
         document.getElementById('exception').addEventListener('submit', async function(event) {
             event.preventDefault();
 
@@ -428,9 +445,10 @@ if ($result && pg_num_rows($result) > 0) {
             const subExceptionType = document.getElementById('subExceptionType').value;
             const startDateTime = document.getElementById('startDateTime').value;
             const endDateTime = document.getElementById('endDateTime').value;
+            const reasonValue = document.getElementById('reason').value;
 
             // Basic validation
-            if (!exceptionType || !subExceptionType || !reason.value.trim()) {
+            if (!exceptionType || !subExceptionType || !reasonValue.trim()) {
                 Swal.fire({
                     title: 'Incomplete Form',
                     text: 'Please fill in all required fields.',
@@ -466,19 +484,14 @@ if ($result && pg_num_rows($result) > 0) {
                 // Second check: Exception count for the month
                 const canProceed = await checkExceptionCount(exceptionDate);
 
-                if (canProceed) {
-                    // Restore button state
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
 
+                if (canProceed) {
                     // Show loading modal
                     showLoadingModal();
-                    // Submit the form
+                    // Submit the form (the server re-validates the schedule rules)
                     this.submit();
-                } else {
-                    // Restore button state
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -514,32 +527,26 @@ if ($result && pg_num_rows($result) > 0) {
             subExceptionType.innerHTML = '';
 
             if (exceptionType === 'entry') {
-                // Show sub-exception type dropdown
                 subExceptionTypeField.style.display = 'block';
 
-                // Populate sub-exception type options for entry
                 subExceptionType.innerHTML = `
                 <option disabled selected>Select sub exception type</option>
                 <option value="late-entry">Late Entry</option>
                 <option value="missed-entry">Missed Entry (Missed Punch In)</option>
             `;
 
-                // Show start date-time field
                 startDateTimeField.style.display = 'block';
                 document.getElementById('startDateTime').required = true;
 
             } else if (exceptionType === 'exit') {
-                // Show sub-exception type dropdown
                 subExceptionTypeField.style.display = 'block';
 
-                // Populate sub-exception type options for exit
                 subExceptionType.innerHTML = `
                 <option disabled selected>Select sub exception type</option>
                 <option value="early-exit">Early Exit</option>
                 <option value="missed-exit">Missed Exit (Missed Punch Out)</option>
             `;
 
-                // Show end date-time field
                 endDateTimeField.style.display = 'block';
                 document.getElementById('endDateTime').required = true;
             }
@@ -547,90 +554,105 @@ if ($result && pg_num_rows($result) > 0) {
     </script>
 
     <script>
+        // Schedule-based checks: reporting_time / exit_time are looked up per selected date
+        // (weekday + start_date/end_date) from associate_schedule_v2 via get_schedule.php
         document.addEventListener("DOMContentLoaded", function() {
-            // Fetch reporting time and exit time from PHP
-            const latestReportingTime = "<?php echo $latestReportingTime; ?>";
-            const latestExitTime = "<?php echo $latestExitTime; ?>";
+            const scheduleCache = {};
 
-            // Function to convert time string (HH:MM:SS) to minutes since midnight
             function timeToMinutes(timeStr) {
-                const [hours, minutes] = timeStr.split(':').map(Number);
-                return (hours * 60) + minutes;
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
             }
 
-            // Convert the time strings to minutes
-            const reportingTimeMinutes = timeToMinutes(latestReportingTime);
-            const exitTimeMinutes = timeToMinutes(latestExitTime);
-
-            // Calculate thresholds in minutes
-            const reportingTimeThreshold = reportingTimeMinutes + 60; // 1 hour late
-            const exitTimeThreshold = exitTimeMinutes - 60; // 1 hour early
-
-            // Function to format minutes to HH:MM AM/PM
             function formatMinutesToTime(minutes) {
                 const hours = Math.floor(minutes / 60);
                 const mins = Math.floor(minutes % 60);
                 const period = hours >= 12 ? 'PM' : 'AM';
-                const formattedHours = hours % 12 || 12; // Convert to 12-hour format
-                return `${String(formattedHours).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${period}`;
+                const h12 = hours % 12 || 12;
+                return `${String(h12).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${period}`;
             }
 
-            // Function to format date as dd/mm/yyyy
             function formatDate(dateStr) {
-                const [year, month, day] = dateStr.split('-');
-                return `${day}/${month}/${year}`;
+                const [y, m, d] = dateStr.split('-');
+                return `${d}/${m}/${y}`;
             }
 
-            // Format the thresholds
-            const formattedReportingTimeThreshold = formatMinutesToTime(reportingTimeMinutes);
-            const formattedExitTimeThreshold = formatMinutesToTime(exitTimeMinutes);
+            // Fetch the schedule for that specific date (cached per date)
+            async function getSchedule(date) {
+                if (scheduleCache[date]) return scheduleCache[date];
+                try {
+                    const res = await fetch(`get_schedule.php?date=${encodeURIComponent(date)}`);
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    scheduleCache[date] = data;
+                    return data;
+                } catch (e) {
+                    console.error('Schedule lookup failed:', e);
+                    return null; // the server-side check will still enforce the rule
+                }
+            }
 
-            // Handle change events for time inputs and exception type
-            document.getElementById('subExceptionType').addEventListener('change', function() {
-                checkTimes();
-            });
+            function warn(title, text, fieldId) {
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'warning',
+                    confirmButtonColor: '#3085d6'
+                });
+                document.getElementById(fieldId).value = '';
+            }
 
-            document.getElementById('startDateTime').addEventListener('change', function() {
-                checkTimes();
-            });
+            async function checkTimes() {
+                const sub = document.getElementById('subExceptionType').value;
+                const startVal = document.getElementById('startDateTime').value;
+                const endVal = document.getElementById('endDateTime').value;
 
-            document.getElementById('endDateTime').addEventListener('change', function() {
-                checkTimes();
-            });
+                // ---- Late entry: max 1 hour after reporting time ----
+                if (sub === 'late-entry' && startVal) {
+                    const [date, time] = startVal.split('T');
+                    const s = await getSchedule(date);
+                    if (s === null) return;
+                    if (document.getElementById('startDateTime').value !== startVal) return; // changed meanwhile
 
-            function checkTimes() {
-                const subExceptionType = document.getElementById('subExceptionType').value;
-                const selectedStartTime = document.getElementById('startDateTime').value;
-                const selectedEndTime = document.getElementById('endDateTime').value;
-
-                if (subExceptionType === 'late-entry' && selectedStartTime) {
-                    const selectedStartDateTime = new Date(selectedStartTime);
-                    const selectedStartMinutes = timeToMinutes(selectedStartTime.split('T')[1]);
-                    if (selectedStartMinutes > reportingTimeThreshold) {
-                        Swal.fire({
-                            title: 'Late Entry Warning',
-                            text: `You are applying for a late-entry exception on ${formatDate(selectedStartTime.split('T')[0])} at ${formatMinutesToTime(selectedStartMinutes)}, which is more than 1 hour after your actual reporting time of ${formattedReportingTimeThreshold}. Please apply for leave through the leave portal.`,
-                            icon: 'warning',
-                            confirmButtonColor: '#3085d6'
-                        });
-                        document.getElementById('startDateTime').value = ''; // Clear the selected time
+                    if (!s.found || !s.reporting_time) {
+                        return warn('No Schedule Found',
+                            `You have no schedule allocated on ${formatDate(date)}. Please contact your supervisor.`,
+                            'startDateTime');
+                    }
+                    const selected = timeToMinutes(time);
+                    const reporting = timeToMinutes(s.reporting_time);
+                    if (selected > reporting + 60) {
+                        warn('Late Entry Warning',
+                            `You are applying for a late-entry exception on ${formatDate(date)} at ${formatMinutesToTime(selected)}, which is more than 1 hour after your reporting time of ${formatMinutesToTime(reporting)}. Please apply for leave through the leave portal.`,
+                            'startDateTime');
                     }
                 }
 
-                if (subExceptionType === 'early-exit' && selectedEndTime) {
-                    const selectedEndDateTime = new Date(selectedEndTime);
-                    const selectedEndMinutes = timeToMinutes(selectedEndTime.split('T')[1]);
-                    if (selectedEndMinutes < exitTimeThreshold) {
-                        Swal.fire({
-                            title: 'Early Exit Warning',
-                            text: `You are applying for an early-exit exception on ${formatDate(selectedEndTime.split('T')[0])} at ${formatMinutesToTime(selectedEndMinutes)}, which is more than 1 hour before your actual exit time of ${formattedExitTimeThreshold}. Please apply for leave through the leave portal.`,
-                            icon: 'warning',
-                            confirmButtonColor: '#3085d6'
-                        });
-                        document.getElementById('endDateTime').value = ''; // Clear the selected time
+                // ---- Early exit: max 1 hour before exit time ----
+                if (sub === 'early-exit' && endVal) {
+                    const [date, time] = endVal.split('T');
+                    const s = await getSchedule(date);
+                    if (s === null) return;
+                    if (document.getElementById('endDateTime').value !== endVal) return; // changed meanwhile
+
+                    if (!s.found || !s.exit_time) {
+                        return warn('No Schedule Found',
+                            `You have no schedule allocated on ${formatDate(date)}. Please contact your supervisor.`,
+                            'endDateTime');
+                    }
+                    const selected = timeToMinutes(time);
+                    const exit = timeToMinutes(s.exit_time);
+                    if (selected < exit - 60) {
+                        warn('Early Exit Warning',
+                            `You are applying for an early-exit exception on ${formatDate(date)} at ${formatMinutesToTime(selected)}, which is more than 1 hour before your scheduled exit time of ${formatMinutesToTime(exit)}. Please apply for leave through the leave portal.`,
+                            'endDateTime');
                     }
                 }
             }
+
+            ['subExceptionType', 'startDateTime', 'endDateTime'].forEach(function(id) {
+                document.getElementById(id).addEventListener('change', checkTimes);
+            });
         });
     </script>
 
