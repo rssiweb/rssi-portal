@@ -36,6 +36,40 @@ function build_ref_number($id, $created_at)
     return substr($micro . $rev, 0, 12);
 }
 
+/**
+ * Turn posted ids into a safe Postgres array literal, e.g. "{3,7,9}".
+ * Returns null if nothing valid was posted.
+ */
+function pg_int_array($values)
+{
+    $ids = array_values(array_unique(array_filter(
+        array_map('intval', (array)$values),
+        fn($v) => $v > 0
+    )));
+    return $ids ? '{' . implode(',', $ids) . '}' : null;
+}
+
+/**
+ * Validate the always-required fields. Returns an error message, or null if all OK.
+ */
+function validate_basic_fields($name, $mobile, $date_of_birth, $visit_type)
+{
+    if (trim((string)$name) === '') {
+        return "Name is required.";
+    }
+    if (trim((string)$mobile) === '') {
+        return "Mobile is required.";
+    }
+    if (!in_array($visit_type, ['inquiry', 'taking admission'], true)) {
+        return "Please select a valid Type of Visit.";
+    }
+    $dob = DateTime::createFromFormat('Y-m-d', (string)$date_of_birth);
+    if (!$dob || $dob->format('Y-m-d') !== $date_of_birth || $date_of_birth > date('Y-m-d')) {
+        return "A valid Date of Birth is required.";
+    }
+    return null;
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['submit_admission'])) {
@@ -43,12 +77,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = $_POST['name'];
         $class_id = $_POST['class_id'] ?: null;
         $mobile = $_POST['mobile'];
+        $date_of_birth = $_POST['date_of_birth'] ?: null;
         $current_address = $_POST['current_address'] ?: null;
         $aadhar_submitted_by = $_POST['aadhar_submitted_by'] ?: null;
         $aadhar_number = $_POST['aadhar_number'] ?: null;
         $previous_school = $_POST['previous_school'] ?: null;
         $visit_type = $_POST['visit_type'];
         $remarks = $_POST['remarks'] ?: null;
+
+        if ($error = validate_basic_fields($name, $mobile, $date_of_birth, $visit_type)) {
+            $_SESSION['error_message'] = $error;
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
 
         // Clear admission-specific fields if visit_type is 'inquiry'
         if ($visit_type == 'inquiry') {
@@ -99,12 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 name, class_id, mobile, current_address, aadhar_submitted_by, aadhar_number,
                 previous_school, family_member_count, monthly_income, visit_type, fees_submission_date, 
                 total_fee, deposited_amount, due_amount, fees_month, payment_mode, 
-                transaction_id, remarks, created_by
+                transaction_id, remarks, created_by, date_of_birth
             ) VALUES (
                 $1, $2, $3, $4, $5, $6,
                 $7, $8, $9, $10, $11,
                 $12, $13, $14, $15, $16,
-                $17, $18, $19
+                $17, $18, $19, $20
             ) RETURNING id
         ";
 
@@ -127,7 +168,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $payment_mode,
             $transaction_id,
             $remarks,
-            $user_id
+            $user_id,
+            $date_of_birth
         ];
 
         $result = pg_query_params($con, $query, $params);
@@ -171,12 +213,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = $_POST['name'];
         $class_id = $_POST['class_id'] ?: null;
         $mobile = $_POST['mobile'];
+        $date_of_birth = $_POST['date_of_birth'] ?: null;
         $current_address = $_POST['current_address'] ?: null;
         $aadhar_submitted_by = $_POST['aadhar_submitted_by'] ?: null;
         $aadhar_number = $_POST['aadhar_number'] ?: null;
         $previous_school = $_POST['previous_school'] ?: null;
         $visit_type = $_POST['visit_type'];
         $remarks = $_POST['remarks'] ?: null;
+
+        if ($error = validate_basic_fields($name, $mobile, $date_of_birth, $visit_type)) {
+            $_SESSION['error_message'] = $error;
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
 
         // Clear admission-specific fields if visit_type is 'inquiry'
         if ($visit_type == 'inquiry') {
@@ -228,7 +277,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 family_member_count = $8, monthly_income = $9, visit_type = $10,
                 fees_submission_date = $11, total_fee = $12, deposited_amount = $13,
                 due_amount = $14, fees_month = $15, payment_mode = $16,
-                transaction_id = $17, remarks = $18, updated_at = NOW()
+                transaction_id = $17, remarks = $18, updated_at = NOW(),
+                date_of_birth = $21
             WHERE id = $19 AND created_by = $20 AND is_closed = FALSE
         ";
 
@@ -252,7 +302,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $transaction_id,
             $remarks,
             $record_id,
-            $user_id
+            $user_id,
+            $date_of_birth
         ];
 
         $result = pg_query_params($con, $query, $params);
@@ -274,6 +325,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['success_message'] = "Record moved back to Active status!";
             } else {
                 $_SESSION['error_message'] = "Error updating record: " . pg_last_error($con);
+            }
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+    } elseif (isset($_POST['bulk_mark_completed'])) {
+        // Active -> Admin bucket (only the user's own records, same rule as the single action)
+        $ids = pg_int_array($_POST['record_ids'] ?? []);
+        if ($ids) {
+            $result = pg_query_params(
+                $con,
+                "UPDATE parent_admissions SET system_process_completed = TRUE
+                 WHERE id = ANY($1::bigint[]) AND created_by = $2 AND is_closed = FALSE",
+                [$ids, $user_id]
+            );
+            $_SESSION[$result ? 'success_message' : 'error_message'] = $result
+                ? pg_affected_rows($result) . " record(s) moved to Admin Workflow!"
+                : "Error updating records: " . pg_last_error($con);
+        } else {
+            $_SESSION['error_message'] = "No records selected.";
+        }
+        header("Location: " . $_SERVER['REQUEST_URI']);
+        exit;
+    } elseif (isset($_POST['bulk_close'])) {
+        if ($user_role == 'Admin') {
+            $ids = pg_int_array($_POST['record_ids'] ?? []);
+            $close_remarks = $_POST['close_remarks'] ?: null;
+            if ($ids) {
+                $result = pg_query_params(
+                    $con,
+                    "UPDATE parent_admissions
+                     SET is_closed = TRUE, closed_by = $1, closed_at = NOW(), close_remarks = $2
+                     WHERE id = ANY($3::bigint[]) AND is_closed = FALSE AND system_process_completed = TRUE",
+                    [$user_id, $close_remarks, $ids]
+                );
+                $_SESSION[$result ? 'success_message' : 'error_message'] = $result
+                    ? pg_affected_rows($result) . " record(s) closed successfully!"
+                    : "Error closing records: " . pg_last_error($con);
+            } else {
+                $_SESSION['error_message'] = "No records selected.";
+            }
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+    } elseif (isset($_POST['bulk_move_to_active'])) {
+        if ($user_role == 'Admin') {
+            $ids = pg_int_array($_POST['record_ids'] ?? []);
+            if ($ids) {
+                $result = pg_query_params(
+                    $con,
+                    "UPDATE parent_admissions SET system_process_completed = FALSE
+                     WHERE id = ANY($1::bigint[]) AND is_closed = FALSE",
+                    [$ids]
+                );
+                $_SESSION[$result ? 'success_message' : 'error_message'] = $result
+                    ? pg_affected_rows($result) . " record(s) moved back to Active!"
+                    : "Error updating records: " . pg_last_error($con);
+            } else {
+                $_SESSION['error_message'] = "No records selected.";
             }
             header("Location: " . $_SERVER['REQUEST_URI']);
             exit;
@@ -352,6 +461,9 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'archive') {
             $ref = build_ref_number($row['id'], $row['created_at']);
             echo '<p class="card-text mb-1"><small class="text-muted">Ref No: <code class="ref-number">' . htmlspecialchars($ref) . '</code></small></p>';
             echo '<p class="card-text mb-1"><small class="text-muted">Mobile: ' . htmlspecialchars($row['mobile']) . '</small></p>';
+            if (!empty($row['date_of_birth'])) {
+                echo '<p class="card-text mb-1"><small class="text-muted">DOB: ' . date('d M Y', strtotime($row['date_of_birth'])) . '</small></p>';
+            }
             if ($row['class_name']) {
                 echo '<p class="card-text mb-1"><small class="text-muted">Class: ' . htmlspecialchars($row['class_name']) . ' (' . htmlspecialchars($row['value']) . ')</small></p>';
             }
@@ -534,6 +646,13 @@ if (isset($_GET['edit'])) {
                         <label for="edit_mobile" class="form-label required-field">Mobile</label>
                         <input type="tel" class="form-control" id="edit_mobile" name="mobile" value="<?= isset($row['mobile']) ? htmlspecialchars($row['mobile']) : '' ?>" required>
                     </div>
+
+                    <div class="mb-2">
+                        <label for="edit_date_of_birth" class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" id="edit_date_of_birth" name="date_of_birth"
+                            max="<?= date('Y-m-d') ?>"
+                            value="<?= !empty($row['date_of_birth']) ? htmlspecialchars($row['date_of_birth']) : '' ?>" required>
+                    </div>
                 </div>
 
                 <div class="col-md-4">
@@ -693,6 +812,10 @@ if (isset($_GET['view'])) {
                         <tr>
                             <th>Mobile</th>
                             <td><?= isset($row['mobile']) ? htmlspecialchars($row['mobile']) : 'N/A' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Date of Birth</th>
+                            <td><?= !empty($row['date_of_birth']) ? date('d M Y', strtotime($row['date_of_birth'])) : 'N/A' ?></td>
                         </tr>
                         <tr>
                             <th>Class</th>
@@ -1028,6 +1151,11 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                                                 <label for="mobile" class="form-label required-field">Mobile</label>
                                                 <input type="tel" class="form-control" id="mobile" name="mobile" required>
                                             </div>
+
+                                            <div class="mb-2">
+                                                <label for="date_of_birth" class="form-label required-field">Date of Birth</label>
+                                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" max="<?= date('Y-m-d') ?>" required>
+                                            </div>
                                         </div>
 
                                         <div class="col-md-4">
@@ -1216,16 +1344,56 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                                                 <?php if (pg_num_rows($result) == 0): ?>
                                                     <div class="alert alert-info">No records found.</div>
                                                 <?php else: ?>
+
+                                                    <?php if ($tab_id == 'active' || ($tab_id == 'admin' && $user_role == 'Admin')): ?>
+                                                        <!-- Bulk action toolbar -->
+                                                        <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>" id="bulkForm-<?= $tab_id ?>"
+                                                            class="d-flex align-items-center flex-wrap gap-2 mb-3 p-2 bg-light border rounded">
+                                                            <div class="form-check mb-0">
+                                                                <input class="form-check-input select-all" type="checkbox" id="selectAll-<?= $tab_id ?>" data-tab="<?= $tab_id ?>">
+                                                                <label class="form-check-label" for="selectAll-<?= $tab_id ?>">Select all</label>
+                                                            </div>
+                                                            <span class="text-muted small" id="selectedCount-<?= $tab_id ?>">0 selected</span>
+
+                                                            <div class="ms-auto">
+                                                                <?php if ($tab_id == 'active'): ?>
+                                                                    <button type="submit" name="bulk_mark_completed" class="btn btn-sm btn-success bulk-action" data-tab="active"
+                                                                        data-confirm="Move selected records to Admin Workflow?" disabled>
+                                                                        <i class="bi bi-check-circle"></i> Move Selected to Admin
+                                                                    </button>
+                                                                <?php else: ?>
+                                                                    <button type="submit" name="bulk_move_to_active" class="btn btn-sm btn-warning bulk-action" data-tab="admin"
+                                                                        data-confirm="Move selected records back to Active?" disabled>
+                                                                        <i class="bi bi-arrow-counterclockwise"></i> Move Selected to Active
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm btn-outline-danger bulk-action" data-tab="admin"
+                                                                        onclick="showBulkCloseModal()" disabled>
+                                                                        <i class="bi bi-archive"></i> Close Selected
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </form>
+                                                    <?php endif; ?>
+
                                                     <?php while ($row = pg_fetch_assoc($result)): ?>
                                                         <div class="card record-card">
                                                             <div class="card-body">
                                                                 <div class="d-flex justify-content-between align-items-start">
                                                                     <div>
+                                                                        <?php if (($tab_id == 'active' && $row['created_by'] == $user_id) || ($tab_id == 'admin' && $user_role == 'Admin')): ?>
+                                                                            <div class="form-check float-start me-2">
+                                                                                <input type="checkbox" class="form-check-input bulk-check" name="record_ids[]"
+                                                                                    value="<?= $row['id'] ?>" form="bulkForm-<?= $tab_id ?>" data-tab="<?= $tab_id ?>">
+                                                                            </div>
+                                                                        <?php endif; ?>
                                                                         <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
                                                                         <p class="card-text mb-1"><small class="text-muted">
                                                                                 Ref No: <code class="ref-number"><?= htmlspecialchars(build_ref_number($row['id'], $row['created_at'])) ?></code>
                                                                             </small></p>
                                                                         <p class="card-text mb-1"><small class="text-muted">Mobile: <?= htmlspecialchars($row['mobile']) ?></small></p>
+                                                                        <?php if (!empty($row['date_of_birth'])): ?>
+                                                                            <p class="card-text mb-1"><small class="text-muted">DOB: <?= date('d M Y', strtotime($row['date_of_birth'])) ?></small></p>
+                                                                        <?php endif; ?>
                                                                         <?php if ($row['class_name']): ?>
                                                                             <p class="card-text mb-1"><small class="text-muted">Class: <?= htmlspecialchars($row['class_name']) ?> (<?= htmlspecialchars($row['value']) ?>)</small></p>
                                                                         <?php endif; ?>
@@ -1381,6 +1549,31 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
             </div>
         </div>
     </div>
+
+    <!-- Bulk Close Modal -->
+    <div class="modal fade" id="bulkCloseModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Close Selected Records</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>">
+                    <div class="modal-body">
+                        <p class="mb-2">You are about to close <strong id="bulkCloseCount">0</strong> record(s).</p>
+                        <div id="bulkCloseIds"></div>
+                        <label for="bulk_close_remarks" class="form-label">Remarks (Optional)</label>
+                        <textarea class="form-control" id="bulk_close_remarks" name="close_remarks" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="bulk_close" class="btn btn-danger">Confirm Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
@@ -1816,6 +2009,57 @@ $selected_tab = isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs) ? $
                 }, 800);
             });
         });
+    </script>
+    <script>
+        // ---- Bulk selection / actions ----
+        function getChecked(tab) {
+            return Array.from(document.querySelectorAll('.bulk-check[data-tab="' + tab + '"]:checked'));
+        }
+
+        function refreshBulkState(tab) {
+            const all = document.querySelectorAll('.bulk-check[data-tab="' + tab + '"]');
+            const checked = getChecked(tab);
+            const counter = document.getElementById('selectedCount-' + tab);
+            if (counter) counter.textContent = checked.length + ' selected';
+
+            document.querySelectorAll('.bulk-action[data-tab="' + tab + '"]').forEach(btn => {
+                btn.disabled = checked.length === 0;
+            });
+
+            const selectAll = document.getElementById('selectAll-' + tab);
+            if (selectAll) {
+                selectAll.checked = all.length > 0 && checked.length === all.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+            }
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('select-all')) {
+                const tab = e.target.dataset.tab;
+                document.querySelectorAll('.bulk-check[data-tab="' + tab + '"]').forEach(cb => cb.checked = e.target.checked);
+                refreshBulkState(tab);
+            } else if (e.target.classList.contains('bulk-check')) {
+                refreshBulkState(e.target.dataset.tab);
+            }
+        });
+
+        // Confirm before bulk submit actions
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.bulk-action[data-confirm]');
+            if (btn && !confirm(btn.dataset.confirm)) {
+                e.preventDefault();
+            }
+        });
+
+        function showBulkCloseModal() {
+            const checked = getChecked('admin');
+            if (!checked.length) return;
+            document.getElementById('bulkCloseCount').textContent = checked.length;
+            document.getElementById('bulkCloseIds').innerHTML = checked
+                .map(cb => '<input type="hidden" name="record_ids[]" value="' + cb.value + '">')
+                .join('');
+            new bootstrap.Modal(document.getElementById('bulkCloseModal')).show();
+        }
     </script>
 </body>
 
